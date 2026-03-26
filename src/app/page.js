@@ -1,66 +1,89 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+// src/app/page.js — Login Page
+'use client';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import styles from './login.module.css';
 
-export default function Home() {
+export default function LoginPage() {
+  const [password, setPassword] = useState('');
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const router = useRouter();
+
+  // Agar already logged in hai toh dashboard pe bhejo
+  useEffect(() => {
+    fetch('/api/admin/check-auth')
+      .then(res => res.json())
+      .then(data => {
+        if (data.loggedIn) {
+          router.replace('/dashboard');
+        } else {
+          setLoading(false);
+        }
+      })
+      .catch(() => setLoading(false));
+  }, [router]);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        router.replace('/dashboard');
+      } else {
+        setError('Wrong password! Please try again.');
+      }
+    } catch {
+      setError('Something went wrong. Try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #1a3fa3 0%, #0d2470 100%)' }}>
+      <div style={{ color: '#fff', fontFamily: 'var(--font-poppins)', fontSize: '1rem' }}>Loading...</div>
+    </div>
+  );
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.js file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className={styles.loginWrap}>
+      <div className={styles.loginCard}>
+        <div className={styles.logo}>
+          <h1 className={styles.logoText}>Sidhe<span>Naukri</span></h1>
+          <p className={styles.logoSub}>Admin Panel</p>
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+
+        <form onSubmit={handleLogin} className={styles.form}>
+          <div className={styles.inputWrap}>
+            <label className={styles.label}>Password</label>
+            <input
+              type="password"
+              className={styles.input}
+              placeholder="Enter admin password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoFocus
             />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+          </div>
+
+          {error && <p className={styles.error}>{error}</p>}
+
+          <button type="submit" className={styles.btn} disabled={submitting}>
+            {submitting ? 'Checking...' : 'Login →'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

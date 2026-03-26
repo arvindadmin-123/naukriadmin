@@ -1,0 +1,171 @@
+/* PostPreview.module.css */
+.previewWrap {
+  background: #f4f6fb;
+  border: 2px dashed #1a3fa3;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 8px;
+}
+
+.previewInner {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 0 8px;
+  font-size: 0.76rem;
+  font-family: var(--font-poppins), sans-serif;
+}
+.breadLink { color: #1a3fa3; font-weight: 500; }
+.breadSep { color: #bbb; }
+.breadCurrent { color: #666; }
+
+/* Hero */
+.hero {
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e0e4ee;
+  padding: 18px 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+}
+
+.catTag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-family: var(--font-poppins), sans-serif;
+}
+
+.heroTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1a3fa3;
+  margin: 0 0 14px;
+  line-height: 1.4;
+  font-family: var(--font-poppins), sans-serif;
+}
+
+.badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.badgeBlue, .badgeOrange, .badgeGreen, .badgeGray {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 20px;
+  font-size: 0.78rem; font-weight: 600;
+  font-family: var(--font-poppins), sans-serif;
+}
+.badgeBlue   { background: #e8f0fe; color: #1a3fa3; border: 1px solid #c5d3f8; }
+.badgeOrange { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+.badgeGreen  { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+.badgeGray   { background: #f1f3f4; color: #555;    border: 1px solid #dadce0; }
+
+.meta { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 5px; }
+.meta li { font-size: 0.84rem; color: #333; display: flex; align-items: center; gap: 7px; font-family: var(--font-poppins), sans-serif; }
+.metaDot { color: #1a3fa3; font-size: 0.4rem; flex-shrink: 0; }
+
+/* Section Block */
+.sectionBlock {
+  margin-bottom: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e0e4ee;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.sectionHeader {
+  background: #1a3fa3;
+  padding: 10px 16px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #fff;
+  font-family: var(--font-poppins), sans-serif;
+}
+.sectionBody { background: #fff; padding: 0; }
+
+/* Short Info */
+.shortInfo {
+  padding: 14px 16px;
+  font-size: 0.88rem;
+  color: #444;
+  line-height: 1.9;
+  font-family: var(--font-poppins), sans-serif;
+}
+.shortInfoLabel { color: #c0392b; font-weight: 700; }
+
+/* Key Value Table */
+.kvTable { width: 100%; border-collapse: collapse; font-family: var(--font-poppins), sans-serif; font-size: 0.87rem; }
+.kvTable tr { border-bottom: 1px solid #eef0f6; }
+.kvTable tr:last-child { border-bottom: none; }
+.kvTable tr:nth-child(even) { background: #f8f9fd; }
+.kvLabel { padding: 10px 14px; color: #444; font-weight: 600; width: 50%; vertical-align: top; }
+.kvValue { padding: 10px 14px; color: #222; font-weight: 500; text-align: right; }
+.link { color: #1a3fa3; font-weight: 700; text-decoration: none; }
+.link:hover { text-decoration: underline; }
+.free { color: #2e7d32; font-weight: 700; }
+
+/* Vacancy Table */
+.vacancyWrap { width: 100%; overflow-x: auto; }
+.vacancyTable { width: 100%; border-collapse: collapse; font-family: var(--font-poppins), sans-serif; font-size: 0.87rem; }
+.vacancyTable th { background: #1a3fa3; color: #fff; padding: 10px 14px; font-weight: 600; }
+.vacancyTable th:first-child { text-align: left; }
+.vacancyTable th:not(:first-child) { text-align: right; }
+.vacancyTable tr { border-bottom: 1px solid #eef0f6; }
+.vacancyTable tr:last-child td { border-bottom: none; }
+.tdLabel { padding: 9px 14px; color: #333; font-weight: 500; }
+.tdValue { padding: 9px 14px; color: #1a3fa3; font-weight: 700; text-align: right; }
+
+/* Content List */
+.contentList { list-style: none; padding: 12px 14px; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.contentItem { display: flex; align-items: flex-start; gap: 12px; font-size: 0.87rem; color: #444; line-height: 1.6; font-family: var(--font-poppins), sans-serif; }
+.dot { color: #1a3fa3; font-size: 1.4rem; flex-shrink: 0; line-height: 1; min-width: 16px; text-align: center; }
+
+/* Selection Process */
+.selectionList { list-style: none; padding: 12px 14px; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.selectionItem { display: flex; align-items: center; gap: 12px; font-size: 0.87rem; color: #333; font-family: var(--font-poppins), sans-serif; }
+.stepNum { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; min-width: 22px; background: #1a3fa3; color: #fff; border-radius: 50%; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; }
+
+/* Important Links */
+.linksList { list-style: none; padding: 12px 14px; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.linksItem { display: flex; align-items: center; gap: 12px; font-family: var(--font-poppins), sans-serif; }
+.linkDot { color: #1a3fa3; font-size: 1.4rem; flex-shrink: 0; line-height: 1; }
+.linkLabel { flex: 1; font-size: 0.85rem; color: #333; font-weight: 500; }
+.linkBtn { flex-shrink: 0; display: inline-block; padding: 7px 18px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; color: #fff; text-decoration: none; font-family: var(--font-poppins), sans-serif; transition: opacity 0.2s; }
+.linkBtn:hover { opacity: 0.85; }
+.btn_green  { background: #2e7d32; }
+.btn_blue   { background: #1a3fa3; }
+.btn_orange { background: #e67e22; }
+
+.oneline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border-top: 1px solid #eef0f6;
+  padding: 10px 14px;
+  background: #f8f9fd;
+}
+
+.onelineItem {
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #444;
+  font-family: var(--font-poppins), sans-serif;
+  padding: 2px 8px 2px 0;
+  white-space: nowrap;
+  min-width: max-content;
+}
+
+.onelineItem:not(:last-child)::after {
+  content: '|';
+  margin-left: 8px;
+  color: #ccc;
+}

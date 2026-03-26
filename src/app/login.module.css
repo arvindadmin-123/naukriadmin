@@ -1,0 +1,100 @@
+.loginWrap {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a3fa3 0%, #0d2470 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.loginCard {
+  background: #fff;
+  border-radius: 16px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+.logo { text-align: center; margin-bottom: 32px; }
+
+.logoText {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1a3fa3;
+  margin: 0;
+  display: block;
+}
+
+.logoText span { color: #fbbf24; }
+
+.logoSub {
+  font-size: 0.85rem;
+  color: #888;
+  margin: 6px 0 0;
+  display: block;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.form { display: flex; flex-direction: column; gap: 20px; }
+
+.inputWrap { display: flex; flex-direction: column; gap: 8px; }
+
+.label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.input {
+  padding: 13px 16px;
+  border: 2px solid #e0e4ee;
+  border-radius: 10px;
+  font-size: 1rem;
+  color: #222;
+  background: #fafbff;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+}
+
+.input:focus {
+  border-color: #1a3fa3;
+  box-shadow: 0 0 0 3px rgba(26,63,163,0.1);
+  background: #fff;
+}
+
+.input::placeholder { color: #aaa; }
+
+.error {
+  font-size: 0.82rem;
+  color: #c0392b;
+  background: #fdf0ee;
+  border: 1px solid #f5c6c0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin: 0;
+}
+
+.btn {
+  background: linear-gradient(135deg, #1a3fa3, #2d5be3);
+  color: #fff;
+  border: none;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+  box-shadow: 0 4px 12px rgba(26,63,163,0.35);
+}
+
+.btn:hover { opacity: 0.92; transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+@media (max-width: 480px) {
+  .loginCard { padding: 28px 20px; }
+  .logoText { font-size: 1.6rem; }
+}
