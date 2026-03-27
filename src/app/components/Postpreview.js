@@ -1,4 +1,4 @@
-// src/app/components/PostPreview.js
+// src/app/components/Postpreview.js
 'use client';
 import styles from './PostPreview.module.css';
 
@@ -26,19 +26,21 @@ function hasData(obj) {
   return Boolean(obj);
 }
 
-function renderFeeVal(val) {
-  if (val === null || val === undefined || val === '') return '—';
-  if (val === 0 || val === '0' || Number(val) === 0) return <span className={styles.free}>Free</span>;
-  if (!isNaN(Number(val)) && val !== '') return `₹ ${Number(val)}`;
-  return String(val);
-}
-
-// URL fix
 function fixUrl(url) {
   if (!url) return '#';
   const t = url.trim();
   if (t.startsWith('http://') || t.startsWith('https://')) return t;
   return 'https://' + t;
+}
+
+function getYouTubeId(url) {
+  if (!url) return null;
+  try {
+    const u = new URL(url.startsWith('http') ? url : 'https://' + url);
+    if (u.hostname.includes('youtu.be')) return u.pathname.slice(1);
+    if (u.hostname.includes('youtube.com')) return u.searchParams.get('v');
+  } catch {}
+  return null;
 }
 
 function SectionBlock({ title, children }) {
@@ -50,6 +52,7 @@ function SectionBlock({ title, children }) {
   );
 }
 
+// Dynamic KV Table — dates etc.
 function KVTable({ data = {} }) {
   if (!data || typeof data !== 'object') return null;
   const rows = Object.entries(data).filter(([, v]) =>
@@ -74,73 +77,7 @@ function KVTable({ data = {} }) {
   );
 }
 
-function FeeTable({ fee }) {
-  if (!fee || typeof fee !== 'object') return null;
-  const mainKeys = ['general', 'obc', 'sc', 'st'];
-  const mainRows = mainKeys.filter(k => fee[k] !== undefined && fee[k] !== null && fee[k] !== '');
-  const morecast = Array.isArray(fee.morecast) ? fee.morecast.filter(m => m.label) : [];
-  const oneline  = Array.isArray(fee.oneline)  ? fee.oneline.filter(Boolean) : [];
-  if (mainRows.length === 0 && morecast.length === 0) return null;
-  return (
-    <>
-      <table className={styles.kvTable}>
-        <tbody>
-          {mainRows.map(key => (
-            <tr key={key}>
-              <td className={styles.kvLabel}>{formatLabel(key)}</td>
-              <td className={styles.kvValue}>{renderFeeVal(fee[key])}</td>
-            </tr>
-          ))}
-          {morecast.map((m, i) => (
-            <tr key={`m-${i}`}>
-              <td className={styles.kvLabel}>{m.label}</td>
-              <td className={styles.kvValue}>{renderFeeVal(m.amount)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {oneline.length > 0 && (
-        <div className={styles.oneline}>
-          {oneline.map((item, i) => <span key={i} className={styles.onelineItem}>{item}</span>)}
-        </div>
-      )}
-    </>
-  );
-}
-
-function AgeTable({ age }) {
-  if (!age) return null;
-  let rows = [];
-  let oneline = [];
-  if (age.rows && Array.isArray(age.rows)) {
-    rows = age.rows.filter(r => r.title && r.age);
-    oneline = Array.isArray(age.oneline) ? age.oneline.filter(Boolean) : [];
-  } else if (Array.isArray(age)) {
-    rows = age.filter(r => r.title && r.age);
-  }
-  if (rows.length === 0) return null;
-  return (
-    <>
-      <table className={styles.kvTable}>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={i}>
-              <td className={styles.kvLabel}>{row.title}</td>
-              <td className={styles.kvValue}>{row.age}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {oneline.length > 0 && (
-        <div className={styles.oneline}>
-          {oneline.map((item, i) => <span key={i} className={styles.onelineItem}>{item}</span>)}
-        </div>
-      )}
-    </>
-  );
-}
-
-// VacancyGrid — oneline support added
+// VacancyGrid — type1 & type2
 function VacancyGrid({ data = [] }) {
   if (!Array.isArray(data) || data.length === 0) return null;
   return (
@@ -182,7 +119,7 @@ function VacancyGrid({ data = [] }) {
   );
 }
 
-// ContentBlock — oneline support added
+// ContentBlock — type3
 function ContentBlock({ data = [] }) {
   if (!Array.isArray(data) || data.length === 0) return null;
   return (
@@ -214,20 +151,6 @@ function ContentBlock({ data = [] }) {
   );
 }
 
-function SelectionProcess({ steps = [] }) {
-  if (!steps?.length) return null;
-  return (
-    <ol className={styles.selectionList}>
-      {steps.map((step, i) => (
-        <li key={i} className={styles.selectionItem}>
-          <span className={styles.stepNum}>{i + 1}</span>
-          <span>{step}</span>
-        </li>
-      ))}
-    </ol>
-  );
-}
-
 function JobHero({ job }) {
   const CAT_COLORS = {
     'jobs':       { bg: '#e8f5e9', color: '#2e7d32' },
@@ -253,7 +176,7 @@ function JobHero({ job }) {
       <span className={styles.catTag} style={{ background: catStyle.bg, color: catStyle.color }}>{job.category}</span>
       <h1 className={styles.heroTitle}>{job.title}</h1>
       <div className={styles.badges}>
-        {job.total_vacancy && <span className={styles.badgeBlue}>📋 {Number(job.total_vacancy).toLocaleString()} Posts</span>}
+        {job.total_vacancy && <span className={styles.badgeBlue}>📋 {job.total_vacancy} Posts</span>}
         {lastDate && <span className={styles.badgeOrange}>📅 Last Date: {lastDate}</span>}
         {job.job_location && <span className={styles.badgeGray}>📍 {job.job_location}</span>}
       </div>
@@ -273,36 +196,27 @@ function JobHero({ job }) {
   );
 }
 
+// ShortInfo — custom ya auto
 function ShortInfo({ item }) {
   if (!item) return null;
+  if (item.short_note && item.short_note.trim() !== '') {
+    return <div className={styles.shortInfo} dangerouslySetInnerHTML={{ __html: item.short_note }} />;
+  }
   const parts = [];
   if (item.organization && item.title) parts.push(`${item.organization} has released the official notification for <strong>${item.title}</strong>.`);
-  if (item.total_vacancy) parts.push(`A total of <strong>${Number(item.total_vacancy).toLocaleString()} vacancies</strong> are available.`);
+  if (item.total_vacancy) parts.push(`A total of <strong>${item.total_vacancy} vacancies</strong> are available.`);
   if (Array.isArray(item.qualification1) && item.qualification1.length > 0)
     parts.push(`Candidates with <strong>${item.qualification1.join(', ')}</strong> qualification are eligible.`);
-  if (item.age_limit?.rows?.length > 0) {
-    const ageStr = item.age_limit.rows.map(a => `${a.title}: ${a.age}`).join(', ');
-    parts.push(`Age limit — <strong>${ageStr}</strong>.`);
-  }
   if (item.job_location) parts.push(`This vacancy is applicable for <strong>${item.job_location}</strong>.`);
+  const lastDate = formatDate(item.important_dates?.last_date);
   const applyStart = formatDate(item.important_dates?.apply_start);
-  const lastDate   = formatDate(item.important_dates?.last_date);
   if (applyStart && lastDate) parts.push(`Apply from <strong>${applyStart}</strong> to <strong>${lastDate}</strong>.`);
-  else if (lastDate) parts.push(`Last date to apply: <strong>${lastDate}</strong>.`);
-  if (item.result?.download_result)         parts.push(`Result has been declared and is available for download.`);
-  if (item.admit_card?.download_admit_card) parts.push(`Admit card is now available for download.`);
-  if (item.answer_key?.download_answer_key) parts.push(`Official answer key has been released.`);
-  if (item.syllabus?.download_syllabus)     parts.push(`Official syllabus PDF is available for download.`);
+  else if (lastDate) parts.push(`Last date: <strong>${lastDate}</strong>.`);
   if (parts.length === 0) return null;
-  return (
-    <div className={styles.shortInfo}>
-      <span className={styles.shortInfoLabel}>Short Information : </span>
-      <span dangerouslySetInnerHTML={{ __html: parts.join(' ') }} />
-    </div>
-  );
+  return <div className={styles.shortInfo} dangerouslySetInnerHTML={{ __html: parts.join(' ') }} />;
 }
 
-// ImportantLinks — url fix + sab links show karo
+// ImportantLinks
 function ImportantLinks({ item = {} }) {
   const allLinks = [];
   if (item.jobs?.apply_online)              allLinks.push({ label: 'Apply Online',       url: fixUrl(item.jobs.apply_online),              cls: 'green' });
@@ -332,11 +246,31 @@ function ImportantLinks({ item = {} }) {
   );
 }
 
+// VideoEmbed
+function VideoEmbed({ url }) {
+  const videoId = getYouTubeId(url);
+  if (!videoId) return null;
+  return (
+    <div style={{ padding: '12px 14px' }}>
+      <div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', height: 0, borderRadius: '8px', overflow: 'hidden' }}>
+        <iframe
+          src={`https://www.youtube.com/embed/${videoId}`}
+          title="YouTube video"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', borderRadius: '8px' }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function PostPreview({ data }) {
   if (!data) return null;
   return (
     <div className={styles.previewWrap}>
       <div className={styles.previewInner}>
+
         <nav className={styles.breadcrumb}>
           <span className={styles.breadLink}>Home</span>
           <span className={styles.breadSep}>›</span>
@@ -351,20 +285,14 @@ export default function PostPreview({ data }) {
           <ShortInfo item={data} />
         </SectionBlock>
 
+        {/* Important Dates — dynamic */}
         {hasData(data.important_dates) && (
           <SectionBlock title="Important Dates">
             <KVTable data={data.important_dates} />
           </SectionBlock>
         )}
 
-        {Array.isArray(data.post_name) && data.post_name.map((grid, i) =>
-          (grid?.rows?.length || grid?.oneline?.length) ? (
-            <SectionBlock key={i} title={grid.title || 'Post Name'}>
-              <VacancyGrid data={[grid]} />
-            </SectionBlock>
-          ) : null
-        )}
-
+        {/* Qualification */}
         {Array.isArray(data.qualification1) && data.qualification1.length > 0 && (
           <SectionBlock title="Qualification">
             <ul className={styles.contentList}>
@@ -375,33 +303,26 @@ export default function PostPreview({ data }) {
           </SectionBlock>
         )}
 
-        {hasData(data.application_fee) && (
-          <SectionBlock title="Application Fee">
-            <FeeTable fee={data.application_fee} />
-          </SectionBlock>
-        )}
-
-        {data.age_limit && (
-          <SectionBlock title="Age Limit">
-            <AgeTable age={data.age_limit} />
-          </SectionBlock>
-        )}
-
-        {Array.isArray(data.tablev) && data.tablev.map((grid, i) =>
+        {/* Type1 */}
+        {Array.isArray(data.type1) && data.type1.map((grid, i) =>
           (grid?.rows?.length || grid?.oneline?.length) ? (
-            <SectionBlock key={i} title={grid.title || 'Vacancy Details'}>
+            <SectionBlock key={i} title={grid.title || 'Details'}>
               <VacancyGrid data={[grid]} />
             </SectionBlock>
           ) : null
         )}
 
-        {Array.isArray(data.selection_process) && data.selection_process.length > 0 && (
-          <SectionBlock title="Selection Process">
-            <SelectionProcess steps={data.selection_process} />
-          </SectionBlock>
+        {/* Type2 */}
+        {Array.isArray(data.type2) && data.type2.map((grid, i) =>
+          (grid?.rows?.length || grid?.oneline?.length) ? (
+            <SectionBlock key={i} title={grid.title || 'Details'}>
+              <VacancyGrid data={[grid]} />
+            </SectionBlock>
+          ) : null
         )}
 
-        {Array.isArray(data.table1) && data.table1.map((block, i) =>
+        {/* Type3 */}
+        {Array.isArray(data.type3) && data.type3.map((block, i) =>
           block?.title ? (
             <SectionBlock key={i} title={block.title}>
               <ContentBlock data={[block]} />
@@ -409,9 +330,18 @@ export default function PostPreview({ data }) {
           ) : null
         )}
 
+        {/* Video */}
+        {data.video?.url && (
+          <SectionBlock title={data.video.title || 'Video'}>
+            <VideoEmbed url={data.video.url} />
+          </SectionBlock>
+        )}
+
+        {/* Important Links */}
         <SectionBlock title="Important Links">
           <ImportantLinks item={data} />
         </SectionBlock>
+
       </div>
     </div>
   );

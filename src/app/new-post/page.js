@@ -6,33 +6,14 @@ import MobileSidebar from '../MobileSidebar';
 import PostPreview from '../components/Postpreview';
 import styles from './new-post.module.css';
 
-const BLOG_ID = '4760900627062932844';
-const POST_ID = '1971014663745817119';
-const API_KEY = 'AIzaSyBcomLK77PJdaM7CXysztVxeAg8iVbF6c0';
+const BLOG_ID = '2842912977848904218';
+const POST_ID = '3377912945921363783';
+const API_KEY = 'AIzaSyALruA3pculIf5zjHeam_wq3fOHQSUJZ7o';
 
 const CATEGORIES = ['Jobs', 'result', 'admit-card', 'answer-key', 'syllabus'];
 
-const DEFAULT_DATES = {
-  Jobs:         ['notification_release', 'apply_start', 'last_date', 'exam_date', 'admit_card_date', 'answer_key_date', 'result_date'],
-  result:       ['exam_date', 'result_date'],
-  'admit-card': ['exam_date', 'admit_card_date'],
-  'answer-key': ['exam_date', 'answer_key_date'],
-  syllabus:     ['exam_date'],
-};
-
-const DATE_LABELS = {
-  notification_release: 'Notification Release',
-  apply_start:          'Apply Start',
-  last_date:            'Last Date',
-  exam_date:            'Exam Date',
-  admit_card_date:      'Admit Card Date',
-  answer_key_date:      'Answer Key Date',
-  result_date:          'Result Date',
-};
-
-const ALL_DATE_KEYS = Object.keys(DATE_LABELS);
-const emptyTable = () => ({ title: '', columns: ['', ''], rows: [['', '']] });
-const emptyBlock = () => ({ title: '', content: [''] });
+const emptyTable = () => ({ title: '', columns: ['', ''], rows: [['', '']], oneline: [] });
+const emptyBlock = () => ({ title: '', content: [''], oneline: [] });
 
 export default function NewPostPage() {
   const [step, setStep]         = useState(1);
@@ -44,31 +25,28 @@ export default function NewPostPage() {
   const [organization, setOrganization] = useState('');
   const [totalVacancy, setTotalVacancy] = useState('');
   const [jobLocation, setJobLocation]   = useState('');
+  const [shortNote, setShortNote]       = useState('');
 
-  const [tags, setTags]                   = useState(['']);
+  const [tags, setTags]                     = useState(['']);
   const [qualification1, setQualification1] = useState(['']);
-  const [selectionProcess, setSelectionProcess] = useState(['']);
 
-  const [dates, setDates]           = useState([]);
+  // Dynamic dates — key custom likhne wala
+  const [dates, setDates]           = useState([{ key: '', value: '' }]);
   const [links, setLinks]           = useState([{ name: '', url: '' }]);
   const [categoryLink, setCategoryLink] = useState('');
 
-  const [feeMain, setFeeMain] = useState({ general: '', obc: '', sc: '', st: '' });
-  const [feeMorecast, setFeeMorecast] = useState([]);
-  const [feeOneline, setFeeOneline]   = useState(['']);
+  const [videoTitle, setVideoTitle] = useState('');
+  const [videoUrl, setVideoUrl]     = useState('');
 
-  const [ageLimits, setAgeLimits] = useState([{ title: '', age: '' }]);
-  const [ageOneline, setAgeOneline] = useState(['']);
+  const [type1, setType1] = useState([]);
+  const [type2, setType2] = useState([]);
+  const [type3, setType3] = useState([]);
 
-  const [postName, setPostName] = useState([]);
-  const [tablev, setTablev]     = useState([]);
-  const [table1, setTable1]     = useState([]);
-
-  const [slugStatus, setSlugStatus] = useState('');
-  const [preview, setPreview]       = useState(false);
+  const [slugStatus, setSlugStatus]   = useState('');
+  const [preview, setPreview]         = useState(false);
   const [confirmBack, setConfirmBack] = useState(false);
-  const [error, setError]           = useState('');
-  const [copied, setCopied]         = useState(false);
+  const [error, setError]             = useState('');
+  const [copied, setCopied]           = useState(false);
 
   const getTodayDate = () => {
     const d = new Date();
@@ -91,8 +69,6 @@ export default function NewPostPage() {
 
   const handleCategorySelect = (cat) => {
     setCategory(cat);
-    setDates((DEFAULT_DATES[cat] || []).map(key => ({ key, value: '' })));
-    setCategoryLink('');
     setCreatedAt(getTodayDate());
     setStep(2);
   };
@@ -104,7 +80,6 @@ export default function NewPostPage() {
     checkSlug(slug);
   };
 
-  // Blogger API se check karo ID already exist karta hai ya nahi
   const checkSlug = useCallback(async (slug) => {
     if (!slug) { setSlugStatus(''); return; }
     setSlugStatus('checking');
@@ -115,57 +90,59 @@ export default function NewPostPage() {
       );
       const data = await res.json();
       const posts = JSON.parse(data.content);
-      const exists = posts.some(p => p.id === slug);
-      setSlugStatus(exists ? 'taken' : 'available');
-    } catch {
-      setSlugStatus('');
-    }
+      setSlugStatus(posts.some(p => p.id === slug) ? 'taken' : 'available');
+    } catch { setSlugStatus(''); }
   }, []);
 
   const updateArr = (setter, i, val) => setter(prev => prev.map((v, j) => j === i ? val : v));
-  const addArr    = (setter) => setter(prev => [...prev, '']);
+  const addArr    = (setter, empty = '') => setter(prev => [...prev, empty]);
   const removeArr = (setter, i) => setter(prev => prev.filter((_, j) => j !== i));
 
-  const updateDate = (i, f, v) => setDates(prev => prev.map((d, j) => j === i ? { ...d, [f]: v } : d));
-  const addDate    = () => { const used = dates.map(d => d.key); const av = ALL_DATE_KEYS.find(k => !used.includes(k)); if (av) setDates(prev => [...prev, { key: av, value: '' }]); };
-  const removeDate = (i) => setDates(prev => prev.filter((_, j) => j !== i));
+  // Dynamic dates
+  const updateDate  = (i, f, v) => setDates(prev => prev.map((d, j) => j === i ? { ...d, [f]: v } : d));
+  const addDate     = () => setDates(prev => [...prev, { key: '', value: '' }]);
+  const removeDate  = (i) => setDates(prev => prev.filter((_, j) => j !== i));
 
   const updateLink = (i, f, v) => setLinks(prev => prev.map((l, j) => j === i ? { ...l, [f]: v } : l));
   const addLink    = () => setLinks(prev => [...prev, { name: '', url: '' }]);
   const removeLink = (i) => setLinks(prev => prev.filter((_, j) => j !== i));
 
-  const addMorecast    = () => setFeeMorecast(prev => [...prev, { label: '', amount: '' }]);
-  const removeMorecast = (i) => setFeeMorecast(prev => prev.filter((_, j) => j !== i));
-  const updateMorecast = (i, f, v) => setFeeMorecast(prev => prev.map((m, j) => j === i ? { ...m, [f]: v } : m));
+  // Type1
+  const addType1          = () => setType1(prev => [...prev, emptyTable()]);
+  const removeType1       = (i) => setType1(prev => prev.filter((_, j) => j !== i));
+  const updateType1       = (i, f, v) => setType1(prev => prev.map((t, j) => j === i ? { ...t, [f]: v } : t));
+  const addType1Row       = (i) => setType1(prev => prev.map((t, j) => j === i ? { ...t, rows: [...t.rows, Array(t.columns.length).fill('')] } : t));
+  const removeType1Row    = (ti, ri) => setType1(prev => prev.map((t, j) => j === ti ? { ...t, rows: t.rows.filter((_, k) => k !== ri) } : t));
+  const updateType1Row    = (ti, ri, ci, val) => setType1(prev => prev.map((t, j) => j === ti ? { ...t, rows: t.rows.map((r, k) => k === ri ? r.map((c, l) => l === ci ? val : c) : r) } : t));
+  const updateType1Col    = (ti, ci, val) => setType1(prev => prev.map((t, j) => j === ti ? { ...t, columns: t.columns.map((c, k) => k === ci ? val : c) } : t));
+  const addType1Oneline   = (i) => setType1(prev => prev.map((t, j) => j === i ? { ...t, oneline: [...(t.oneline||[]), ''] } : t));
+  const removeType1Oneline= (ti, ii) => setType1(prev => prev.map((t, j) => j === ti ? { ...t, oneline: t.oneline.filter((_, k) => k !== ii) } : t));
+  const updateType1Oneline= (ti, ii, v) => setType1(prev => prev.map((t, j) => j === ti ? { ...t, oneline: t.oneline.map((o, k) => k === ii ? v : o) } : t));
 
-  const addAge    = () => setAgeLimits(prev => [...prev, { title: '', age: '' }]);
-  const removeAge = (i) => setAgeLimits(prev => prev.filter((_, j) => j !== i));
-  const updateAge = (i, f, v) => setAgeLimits(prev => prev.map((a, j) => j === i ? { ...a, [f]: v } : a));
+  // Type2
+  const addType2          = () => setType2(prev => [...prev, emptyTable()]);
+  const removeType2       = (i) => setType2(prev => prev.filter((_, j) => j !== i));
+  const updateType2       = (i, f, v) => setType2(prev => prev.map((t, j) => j === i ? { ...t, [f]: v } : t));
+  const addType2Row       = (i) => setType2(prev => prev.map((t, j) => j === i ? { ...t, rows: [...t.rows, Array(t.columns.length).fill('')] } : t));
+  const removeType2Row    = (ti, ri) => setType2(prev => prev.map((t, j) => j === ti ? { ...t, rows: t.rows.filter((_, k) => k !== ri) } : t));
+  const updateType2Row    = (ti, ri, ci, val) => setType2(prev => prev.map((t, j) => j === ti ? { ...t, rows: t.rows.map((r, k) => k === ri ? r.map((c, l) => l === ci ? val : c) : r) } : t));
+  const updateType2Col    = (ti, ci, val) => setType2(prev => prev.map((t, j) => j === ti ? { ...t, columns: t.columns.map((c, k) => k === ci ? val : c) } : t));
+  const addType2Col       = (i) => setType2(prev => prev.map((t, j) => j === i ? { ...t, columns: [...t.columns, ''], rows: t.rows.map(r => [...r, '']) } : t));
+  const removeType2Col    = (ti, ci) => setType2(prev => prev.map((t, j) => j === ti ? { ...t, columns: t.columns.filter((_, k) => k !== ci), rows: t.rows.map(r => r.filter((_, k) => k !== ci)) } : t));
+  const addType2Oneline   = (i) => setType2(prev => prev.map((t, j) => j === i ? { ...t, oneline: [...(t.oneline||[]), ''] } : t));
+  const removeType2Oneline= (ti, ii) => setType2(prev => prev.map((t, j) => j === ti ? { ...t, oneline: t.oneline.filter((_, k) => k !== ii) } : t));
+  const updateType2Oneline= (ti, ii, v) => setType2(prev => prev.map((t, j) => j === ti ? { ...t, oneline: t.oneline.map((o, k) => k === ii ? v : o) } : t));
 
-  const addPostName       = () => setPostName(prev => [...prev, emptyTable()]);
-  const removePostName    = (i) => setPostName(prev => prev.filter((_, j) => j !== i));
-  const updatePostName    = (i, f, v) => setPostName(prev => prev.map((t, j) => j === i ? { ...t, [f]: v } : t));
-  const addPostNameRow    = (i) => setPostName(prev => prev.map((t, j) => j === i ? { ...t, rows: [...t.rows, Array(t.columns.length).fill('')] } : t));
-  const removePostNameRow = (ti, ri) => setPostName(prev => prev.map((t, j) => j === ti ? { ...t, rows: t.rows.filter((_, k) => k !== ri) } : t));
-  const updatePostNameRow = (ti, ri, ci, val) => setPostName(prev => prev.map((t, j) => j === ti ? { ...t, rows: t.rows.map((r, k) => k === ri ? r.map((c, l) => l === ci ? val : c) : r) } : t));
-  const updatePostNameCol = (ti, ci, val) => setPostName(prev => prev.map((t, j) => j === ti ? { ...t, columns: t.columns.map((c, k) => k === ci ? val : c) } : t));
-
-  const addTablev       = () => setTablev(prev => [...prev, emptyTable()]);
-  const removeTablev    = (i) => setTablev(prev => prev.filter((_, j) => j !== i));
-  const updateTablev    = (i, f, v) => setTablev(prev => prev.map((t, j) => j === i ? { ...t, [f]: v } : t));
-  const addTablevRow    = (i) => setTablev(prev => prev.map((t, j) => j === i ? { ...t, rows: [...t.rows, Array(t.columns.length).fill('')] } : t));
-  const removeTablevRow = (ti, ri) => setTablev(prev => prev.map((t, j) => j === ti ? { ...t, rows: t.rows.filter((_, k) => k !== ri) } : t));
-  const updateTablevRow = (ti, ri, ci, val) => setTablev(prev => prev.map((t, j) => j === ti ? { ...t, rows: t.rows.map((r, k) => k === ri ? r.map((c, l) => l === ci ? val : c) : r) } : t));
-  const updateTablevCol = (ti, ci, val) => setTablev(prev => prev.map((t, j) => j === ti ? { ...t, columns: t.columns.map((c, k) => k === ci ? val : c) } : t));
-  const addTablevCol    = (i) => setTablev(prev => prev.map((t, j) => j === i ? { ...t, columns: [...t.columns, ''], rows: t.rows.map(r => [...r, '']) } : t));
-  const removeTablevCol = (ti, ci) => setTablev(prev => prev.map((t, j) => j === ti ? { ...t, columns: t.columns.filter((_, k) => k !== ci), rows: t.rows.map(r => r.filter((_, k) => k !== ci)) } : t));
-
-  const addTable1        = () => setTable1(prev => [...prev, emptyBlock()]);
-  const removeTable1     = (i) => setTable1(prev => prev.filter((_, j) => j !== i));
-  const updateTable1Title = (i, v) => setTable1(prev => prev.map((b, j) => j === i ? { ...b, title: v } : b));
-  const addTable1Item    = (i) => setTable1(prev => prev.map((b, j) => j === i ? { ...b, content: [...b.content, ''] } : b));
-  const removeTable1Item = (bi, ii) => setTable1(prev => prev.map((b, j) => j === bi ? { ...b, content: b.content.filter((_, k) => k !== ii) } : b));
-  const updateTable1Item = (bi, ii, v) => setTable1(prev => prev.map((b, j) => j === bi ? { ...b, content: b.content.map((c, k) => k === ii ? v : c) } : b));
+  // Type3
+  const addType3          = () => setType3(prev => [...prev, emptyBlock()]);
+  const removeType3       = (i) => setType3(prev => prev.filter((_, j) => j !== i));
+  const updateType3Title  = (i, v) => setType3(prev => prev.map((b, j) => j === i ? { ...b, title: v } : b));
+  const addType3Item      = (i) => setType3(prev => prev.map((b, j) => j === i ? { ...b, content: [...b.content, ''] } : b));
+  const removeType3Item   = (bi, ii) => setType3(prev => prev.map((b, j) => j === bi ? { ...b, content: b.content.filter((_, k) => k !== ii) } : b));
+  const updateType3Item   = (bi, ii, v) => setType3(prev => prev.map((b, j) => j === bi ? { ...b, content: b.content.map((c, k) => k === ii ? v : c) } : b));
+  const addType3Oneline   = (i) => setType3(prev => prev.map((b, j) => j === i ? { ...b, oneline: [...(b.oneline||[]), ''] } : b));
+  const removeType3Oneline= (bi, ii) => setType3(prev => prev.map((b, j) => j === bi ? { ...b, oneline: b.oneline.filter((_, k) => k !== ii) } : b));
+  const updateType3Oneline= (bi, ii, v) => setType3(prev => prev.map((b, j) => j === bi ? { ...b, oneline: b.oneline.map((o, k) => k === ii ? v : o) } : b));
 
   const buildData = () => {
     const importantDates = {};
@@ -179,41 +156,29 @@ export default function NewPostPage() {
       category,
       title,
       organization: organization || null,
-      total_vacancy: totalVacancy ? Number(totalVacancy) : null,
+      total_vacancy: totalVacancy || null,
       job_location: jobLocation || null,
+      short_note: shortNote || null,
       tags: tags.filter(Boolean),
       qualification1: qualification1.filter(Boolean),
       important_dates: importantDates,
-      application_fee: category === 'Jobs' ? {
-        general: Number(feeMain.general) || 0,
-        obc:     Number(feeMain.obc)     || 0,
-        sc:      Number(feeMain.sc)      || 0,
-        st:      Number(feeMain.st)      || 0,
-        morecast: feeMorecast.filter(m => m.label).map(m => ({ label: m.label, amount: Number(m.amount) || 0 })),
-        oneline:  feeOneline.filter(Boolean),
-      } : null,
-      age_limit: category === 'Jobs' ? {
-        rows: ageLimits.filter(a => a.title && a.age),
-        oneline: ageOneline.filter(Boolean),
-      } : null,
-      selection_process: selectionProcess.filter(Boolean),
       important_links: importantLinks,
+      video: (videoUrl) ? { title: videoTitle || '', url: videoUrl } : null,
       jobs:       category === 'Jobs'       && categoryLink ? { apply_online:        categoryLink } : null,
       result:     category === 'result'     && categoryLink ? { download_result:     categoryLink } : null,
       admit_card: category === 'admit-card' && categoryLink ? { download_admit_card: categoryLink } : null,
       answer_key: category === 'answer-key' && categoryLink ? { download_answer_key: categoryLink } : null,
       syllabus:   category === 'syllabus'   && categoryLink ? { download_syllabus:   categoryLink } : null,
-      post_name: postName.filter(t => t.rows.length > 0),
-      tablev:    tablev.filter(t => t.rows.length > 0),
-      table1:    table1.filter(b => b.title),
+      type1: type1.filter(t => t.rows.length > 0).map(t => ({ ...t, oneline: (t.oneline||[]).filter(Boolean) })),
+      type2: type2.filter(t => t.rows.length > 0).map(t => ({ ...t, oneline: (t.oneline||[]).filter(Boolean) })),
+      type3: type3.filter(b => b.title).map(b => ({ ...b, oneline: (b.oneline||[]).filter(Boolean) })),
     };
   };
 
   const handleCopyJSON = () => {
     if (!id || !title || !category) { setError('Title, URL aur Category zaroori hai!'); return; }
     setError('');
-    const json = JSON.stringify(buildData(), null, 2);
-    navigator.clipboard.writeText(json).then(() => {
+    navigator.clipboard.writeText(JSON.stringify(buildData(), null, 2)).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 3000);
     });
@@ -236,7 +201,7 @@ export default function NewPostPage() {
           <Link href="/dashboard" className={styles.navLink}>📊 Dashboard</Link>
           <Link href="/new-post" className={`${styles.navLink} ${styles.active}`}>✏️ New Post</Link>
           <Link href="/posts" className={styles.navLink}>📋 All Posts</Link>
-          <Link href="/revalidate" className={styles.navLink}>🔄 Revalidate</Link>
+           <Link href="/revalidate" className={styles.navLink}>🔄 Revalidate</Link>
         </nav>
         <form action="/api/admin/logout" method="POST" className={styles.logoutWrap}>
           <button type="submit" className={styles.logoutBtn}>🚪 Logout</button>
@@ -254,11 +219,7 @@ export default function NewPostPage() {
               <button className={styles.previewBtn} onClick={() => setPreview(p => !p)}>
                 {preview ? '📝 Edit' : '👁 Preview'}
               </button>
-              <button
-                className={`${styles.copyBtn} ${copied ? styles.copiedBtn : ''}`}
-                onClick={handleCopyJSON}
-                disabled={slugStatus === 'taken'}
-              >
+              <button className={`${styles.copyBtn} ${copied ? styles.copiedBtn : ''}`} onClick={handleCopyJSON} disabled={slugStatus === 'taken'}>
                 {copied ? '✅ Copied!' : '📋 Copy JSON'}
               </button>
             </div>
@@ -268,7 +229,6 @@ export default function NewPostPage() {
         {copied && <div className={styles.successMsg}>✅ JSON copied! Blogger me paste karo.</div>}
         {error  && <div className={styles.errorMsg}>{error}</div>}
 
-        {/* STEP 1 */}
         {step === 1 && (
           <div className={styles.stepCard}>
             <h2 className={styles.stepTitle}>Step 1 — Category chuniye</h2>
@@ -284,10 +244,10 @@ export default function NewPostPage() {
           </div>
         )}
 
-        {/* STEP 2 — Form */}
         {step === 2 && !preview && (
           <div className={styles.formGrid}>
 
+            {/* Basic Info */}
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>Basic Information</h2>
               <div className={styles.field}><label>Title *</label><input value={title} onChange={e => handleTitleChange(e.target.value)} placeholder="SSC GD Constable Recruitment 2026" /></div>
@@ -304,21 +264,21 @@ export default function NewPostPage() {
                 <div className={styles.field}><label>Organization</label><input value={organization} onChange={e => setOrganization(e.target.value)} placeholder="Staff Selection Commission" /></div>
               </div>
               <div className={styles.row2}>
-                <div className={styles.field}><label>Total Vacancy</label><input type="number" value={totalVacancy} onChange={e => setTotalVacancy(e.target.value)} placeholder="7668" /></div>
+                <div className={styles.field}><label>Total Vacancy</label><input value={totalVacancy} onChange={e => setTotalVacancy(e.target.value)} placeholder="7668" /></div>
                 <div className={styles.field}><label>Job Location</label><input value={jobLocation} onChange={e => setJobLocation(e.target.value)} placeholder="India" /></div>
               </div>
               <div className={styles.field}>
                 <label>Tags</label>
                 {tags.map((tag, i) => (
                   <div key={i} className={styles.inlineRow}>
-                    <input value={tag} onChange={e => updateArr(setTags, i, e.target.value)} placeholder="ssc / police / railway..." />
+                    <input value={tag} onChange={e => updateArr(setTags, i, e.target.value)} placeholder="ssc / police..." />
                     {tags.length > 1 && <button className={styles.removeInlineBtn} onClick={() => removeArr(setTags, i)}>✕</button>}
                   </div>
                 ))}
                 <button className={styles.addBtn} onClick={() => addArr(setTags)}>+ Add Tag</button>
               </div>
               <div className={styles.field}>
-                <label>Qualification Details</label>
+                <label>Qualification</label>
                 {qualification1.map((q, i) => (
                   <div key={i} className={styles.inlineRow}>
                     <input value={q} onChange={e => updateArr(setQualification1, i, e.target.value)} placeholder="12th pass / Graduate..." />
@@ -327,25 +287,29 @@ export default function NewPostPage() {
                 ))}
                 <button className={styles.addBtn} onClick={() => addArr(setQualification1)}>+ Add Qualification</button>
               </div>
+              <div className={styles.field}>
+                <label>Short Note <span style={{fontWeight:400,color:'#888',fontSize:'0.78rem'}}>(khali chhodo = auto generate)</span></label>
+                <textarea value={shortNote} onChange={e => setShortNote(e.target.value)} placeholder="Custom short note likhein..." rows={3} style={{width:'100%',padding:'10px 14px',border:'1.5px solid #d0d5e8',borderRadius:'8px',fontFamily:'var(--font-poppins)',fontSize:'0.88rem',resize:'vertical',outline:'none'}} />
+              </div>
             </div>
 
+            {/* Category Link */}
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>{catLinkLabel[category]}</h2>
               <div className={styles.field}><label>{catLinkLabel[category]}</label><input value={categoryLink} onChange={e => setCategoryLink(e.target.value)} placeholder="https://..." /></div>
             </div>
 
+            {/* Important Dates — fully dynamic */}
             <div className={styles.card}>
-              <h2 className={styles.cardTitle}>Important Dates (DD/MM/YYYY)</h2>
+              <h2 className={styles.cardTitle}>Important Dates</h2>
               {dates.map((d, i) => (
                 <div key={i} className={styles.dynamicRow}>
                   <div className={styles.field} style={{flex:'0 0 180px'}}>
-                    <label>Date Type</label>
-                    <select value={d.key} onChange={e => updateDate(i, 'key', e.target.value)}>
-                      {ALL_DATE_KEYS.map(k => <option key={k} value={k}>{DATE_LABELS[k]}</option>)}
-                    </select>
+                    <label>Date Label</label>
+                    <input value={d.key} onChange={e => updateDate(i, 'key', e.target.value)} placeholder="last_date / exam_date..." />
                   </div>
                   <div className={styles.field} style={{flex:1}}>
-                    <label>Date</label>
+                    <label>Date (DD/MM/YYYY)</label>
                     <input type="date" value={toInputDate(d.value)} onChange={e => updateDate(i, 'value', fromInputDate(e.target.value))} />
                   </div>
                   <button className={styles.removeBtn} onClick={() => removeDate(i)}>✕</button>
@@ -354,171 +318,148 @@ export default function NewPostPage() {
               <button className={styles.addBtn} onClick={addDate}>+ Add Date</button>
             </div>
 
+            {/* Important Links */}
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>Important Links</h2>
               {links.map((l, i) => (
                 <div key={i} className={styles.dynamicRow}>
                   <div className={styles.field} style={{flex:'0 0 180px'}}><label>Link Name</label><input value={l.name} onChange={e => updateLink(i, 'name', e.target.value)} placeholder="Official Website" /></div>
-                  <div className={styles.field} style={{flex:1}}><label>URL</label><input value={l.url} onChange={e => updateLink(i, 'url', e.target.value)} placeholder="https://ssc.nic.in" /></div>
+                  <div className={styles.field} style={{flex:1}}><label>URL</label><input value={l.url} onChange={e => updateLink(i, 'url', e.target.value)} placeholder="https://..." /></div>
                   {links.length > 1 && <button className={styles.removeBtn} onClick={() => removeLink(i)}>✕</button>}
                 </div>
               ))}
               <button className={styles.addBtn} onClick={addLink}>+ Add Link</button>
             </div>
 
+            {/* Type1 */}
             <div className={styles.card}>
-              <h2 className={styles.cardTitle}>Data Type1 (Table)</h2>
-              {postName.map((t, ti) => (
+              <h2 className={styles.cardTitle}>Type1 Tables</h2>
+              {type1.map((t, ti) => (
                 <div key={ti} className={styles.tableBlock}>
                   <div className={styles.tableBlockHeader}>
-                    <input className={styles.tableTitleInput} value={t.title} onChange={e => updatePostName(ti, 'title', e.target.value)} placeholder="Post Wise Vacancy" />
-                    <button className={styles.removeBtn} onClick={() => removePostName(ti)}>✕ Remove</button>
+                    <input className={styles.tableTitleInput} value={t.title} onChange={e => updateType1(ti, 'title', e.target.value)} placeholder="Table Title" />
+                    <button className={styles.removeBtn} onClick={() => removeType1(ti)}>✕ Remove</button>
                   </div>
                   <div className={styles.tableGrid}>
                     <div className={styles.tableHeaderRow}>
                       {t.columns.map((col, ci) => (
                         <div key={ci} className={styles.tableColWrap}>
-                          <input className={styles.tableColInput} value={col} onChange={e => updatePostNameCol(ti, ci, e.target.value)} placeholder={`Column ${ci+1}`} />
+                          <input className={styles.tableColInput} value={col} onChange={e => updateType1Col(ti, ci, e.target.value)} placeholder={`Col ${ci+1}`} />
                         </div>
                       ))}
                     </div>
                     {t.rows.map((row, ri) => (
                       <div key={ri} className={styles.tableRow}>
                         {row.map((cell, ci) => (
-                          <input key={ci} className={styles.tableCellInput} value={cell} onChange={e => updatePostNameRow(ti, ri, ci, e.target.value)} placeholder={ci===0?'Post Name':'Count'} />
+                          <input key={ci} className={styles.tableCellInput} value={cell} onChange={e => updateType1Row(ti, ri, ci, e.target.value)} placeholder={`R${ri+1}C${ci+1}`} />
                         ))}
-                        <button className={styles.removeRowBtn} onClick={() => removePostNameRow(ti, ri)}>✕</button>
+                        <button className={styles.removeRowBtn} onClick={() => removeType1Row(ti, ri)}>✕</button>
                       </div>
                     ))}
                   </div>
-                  <button className={styles.addBtn} style={{marginTop:8}} onClick={() => addPostNameRow(ti)}>+ Add Row</button>
+                  <button className={styles.addBtn} style={{marginTop:8}} onClick={() => addType1Row(ti)}>+ Add Row</button>
+                  <div className={styles.subLabel} style={{marginTop:12}}>One Line Info</div>
+                  {(t.oneline||[]).map((item, ii) => (
+                    <div key={ii} className={styles.inlineRow}>
+                      <input value={item} onChange={e => updateType1Oneline(ti, ii, e.target.value)} placeholder="Extra info..." />
+                      <button className={styles.removeInlineBtn} onClick={() => removeType1Oneline(ti, ii)}>✕</button>
+                    </div>
+                  ))}
+                  <button className={styles.addBtn} onClick={() => addType1Oneline(ti)}>+ Add One Line</button>
                 </div>
               ))}
-              <button className={styles.addBtn} onClick={addPostName}>+ Add Post Name Table</button>
+              <button className={styles.addBtn} onClick={addType1}>+ Add Type1 Table</button>
             </div>
 
+            {/* Type2 */}
             <div className={styles.card}>
-              <h2 className={styles.cardTitle}>Data Type2 (tablev)</h2>
-              {tablev.map((t, ti) => (
+              <h2 className={styles.cardTitle}>Type2 Tables</h2>
+              {type2.map((t, ti) => (
                 <div key={ti} className={styles.tableBlock}>
                   <div className={styles.tableBlockHeader}>
-                    <input className={styles.tableTitleInput} value={t.title} onChange={e => updateTablev(ti, 'title', e.target.value)} placeholder="Post Wise Vacancy" />
-                    <button className={styles.removeBtn} onClick={() => removeTablev(ti)}>✕ Remove</button>
+                    <input className={styles.tableTitleInput} value={t.title} onChange={e => updateType2(ti, 'title', e.target.value)} placeholder="Table Title" />
+                    <button className={styles.removeBtn} onClick={() => removeType2(ti)}>✕ Remove</button>
                   </div>
                   <div className={styles.tableGrid}>
                     <div className={styles.tableHeaderRow}>
                       {t.columns.map((col, ci) => (
                         <div key={ci} className={styles.tableColWrap}>
-                          <input className={styles.tableColInput} value={col} onChange={e => updateTablevCol(ti, ci, e.target.value)} placeholder={`Column ${ci+1}`} />
-                          {t.columns.length > 1 && <button className={styles.removeColBtn} onClick={() => removeTablevCol(ti, ci)}>✕</button>}
+                          <input className={styles.tableColInput} value={col} onChange={e => updateType2Col(ti, ci, e.target.value)} placeholder={`Col ${ci+1}`} />
+                          {t.columns.length > 1 && <button className={styles.removeColBtn} onClick={() => removeType2Col(ti, ci)}>✕</button>}
                         </div>
                       ))}
-                      <button className={styles.addColBtn} onClick={() => addTablevCol(ti)}>+ Col</button>
+                      <button className={styles.addColBtn} onClick={() => addType2Col(ti)}>+ Col</button>
                     </div>
                     {t.rows.map((row, ri) => (
                       <div key={ri} className={styles.tableRow}>
                         {row.map((cell, ci) => (
-                          <input key={ci} className={styles.tableCellInput} value={cell} onChange={e => updateTablevRow(ti, ri, ci, e.target.value)} placeholder={`Row ${ri+1} Col ${ci+1}`} />
+                          <input key={ci} className={styles.tableCellInput} value={cell} onChange={e => updateType2Row(ti, ri, ci, e.target.value)} placeholder={`R${ri+1}C${ci+1}`} />
                         ))}
-                        <button className={styles.removeRowBtn} onClick={() => removeTablevRow(ti, ri)}>✕</button>
+                        <button className={styles.removeRowBtn} onClick={() => removeType2Row(ti, ri)}>✕</button>
                       </div>
                     ))}
                   </div>
-                  <button className={styles.addBtn} style={{marginTop:8}} onClick={() => addTablevRow(ti)}>+ Add Row</button>
+                  <button className={styles.addBtn} style={{marginTop:8}} onClick={() => addType2Row(ti)}>+ Add Row</button>
+                  <div className={styles.subLabel} style={{marginTop:12}}>One Line Info</div>
+                  {(t.oneline||[]).map((item, ii) => (
+                    <div key={ii} className={styles.inlineRow}>
+                      <input value={item} onChange={e => updateType2Oneline(ti, ii, e.target.value)} placeholder="Extra info..." />
+                      <button className={styles.removeInlineBtn} onClick={() => removeType2Oneline(ti, ii)}>✕</button>
+                    </div>
+                  ))}
+                  <button className={styles.addBtn} onClick={() => addType2Oneline(ti)}>+ Add One Line</button>
                 </div>
               ))}
-              <button className={styles.addBtn} onClick={addTablev}>+ Add Vacancy Table</button>
+              <button className={styles.addBtn} onClick={addType2}>+ Add Type2 Table</button>
             </div>
 
+            {/* Type3 */}
             <div className={styles.card}>
-              <h2 className={styles.cardTitle}>Data Type3 (table1)</h2>
-              {table1.map((b, bi) => (
+              <h2 className={styles.cardTitle}>Type3 Content Blocks</h2>
+              {type3.map((b, bi) => (
                 <div key={bi} className={styles.tableBlock}>
                   <div className={styles.tableBlockHeader}>
-                    <input className={styles.tableTitleInput} value={b.title} onChange={e => updateTable1Title(bi, e.target.value)} placeholder="Important Notice" />
-                    <button className={styles.removeBtn} onClick={() => removeTable1(bi)}>✕ Remove</button>
+                    <input className={styles.tableTitleInput} value={b.title} onChange={e => updateType3Title(bi, e.target.value)} placeholder="Block Title" />
+                    <button className={styles.removeBtn} onClick={() => removeType3(bi)}>✕ Remove</button>
                   </div>
                   {b.content.map((item, ii) => (
                     <div key={ii} className={styles.inlineRow}>
-                      <input value={item} onChange={e => updateTable1Item(bi, ii, e.target.value)} placeholder="Bullet point text..." />
-                      {b.content.length > 1 && <button className={styles.removeInlineBtn} onClick={() => removeTable1Item(bi, ii)}>✕</button>}
+                      <input value={item} onChange={e => updateType3Item(bi, ii, e.target.value)} placeholder="Bullet point..." />
+                      {b.content.length > 1 && <button className={styles.removeInlineBtn} onClick={() => removeType3Item(bi, ii)}>✕</button>}
                     </div>
                   ))}
-                  <button className={styles.addBtn} onClick={() => addTable1Item(bi)}>+ Add Point</button>
+                  <button className={styles.addBtn} onClick={() => addType3Item(bi)}>+ Add Point</button>
+                  <div className={styles.subLabel} style={{marginTop:12}}>One Line Info</div>
+                  {(b.oneline||[]).map((item, ii) => (
+                    <div key={ii} className={styles.inlineRow}>
+                      <input value={item} onChange={e => updateType3Oneline(bi, ii, e.target.value)} placeholder="Extra info..." />
+                      <button className={styles.removeInlineBtn} onClick={() => removeType3Oneline(bi, ii)}>✕</button>
+                    </div>
+                  ))}
+                  <button className={styles.addBtn} onClick={() => addType3Oneline(bi)}>+ Add One Line</button>
                 </div>
               ))}
-              <button className={styles.addBtn} onClick={addTable1}>+ Add Content Block</button>
+              <button className={styles.addBtn} onClick={addType3}>+ Add Type3 Block</button>
             </div>
 
-            {category === 'Jobs' && (
-              <>
-                <div className={styles.card}>
-                  <h2 className={styles.cardTitle}>Application Fee (₹)</h2>
-                  <div className={styles.row3}>
-                    <div className={styles.field}><label>General</label><input value={feeMain.general} onChange={e => setFeeMain(f=>({...f,general:e.target.value}))} placeholder="100" /></div>
-                    <div className={styles.field}><label>OBC</label><input value={feeMain.obc} onChange={e => setFeeMain(f=>({...f,obc:e.target.value}))} placeholder="100" /></div>
-                    <div className={styles.field}><label>SC</label><input value={feeMain.sc} onChange={e => setFeeMain(f=>({...f,sc:e.target.value}))} placeholder="0" /></div>
-                  </div>
-                  <div className={styles.row2}>
-                    <div className={styles.field}><label>ST</label><input value={feeMain.st} onChange={e => setFeeMain(f=>({...f,st:e.target.value}))} placeholder="0" /></div>
-                  </div>
-                  {feeMorecast.length > 0 && <div className={styles.subLabel}>Additional Categories</div>}
-                  {feeMorecast.map((m, i) => (
-                    <div key={i} className={styles.dynamicRow}>
-                      <div className={styles.field} style={{flex:'0 0 160px'}}><label>Category</label><input value={m.label} onChange={e => updateMorecast(i,'label',e.target.value)} placeholder="PWD / Ex-Serviceman" /></div>
-                      <div className={styles.field} style={{flex:1}}><label>Amount (₹)</label><input value={m.amount} onChange={e => updateMorecast(i,'amount',e.target.value)} placeholder="0" /></div>
-                      <button className={styles.removeBtn} onClick={() => removeMorecast(i)}>✕</button>
-                    </div>
-                  ))}
-                  <button className={styles.addBtn} onClick={addMorecast}>+ Add Category</button>
-                  <div className={styles.subLabel} style={{marginTop:12}}>One Line Info</div>
-                  {feeOneline.map((item, i) => (
-                    <div key={i} className={styles.inlineRow}>
-                      <input value={item} onChange={e => updateArr(setFeeOneline, i, e.target.value)} placeholder="Payment Mode: Online only" />
-                      {feeOneline.length > 1 && <button className={styles.removeInlineBtn} onClick={() => removeArr(setFeeOneline, i)}>✕</button>}
-                    </div>
-                  ))}
-                  <button className={styles.addBtn} onClick={() => addArr(setFeeOneline)}>+ Add Info Line</button>
-                </div>
+            {/* Video */}
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>YouTube Video (Optional)</h2>
+              <div className={styles.field}><label>Video Title</label><input value={videoTitle} onChange={e => setVideoTitle(e.target.value)} placeholder="SSC GD 2026 Full Guide" /></div>
+              <div className={styles.field}><label>YouTube URL</label><input value={videoUrl} onChange={e => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." /></div>
+            </div>
 
-                <div className={styles.card}>
-                  <h2 className={styles.cardTitle}>Age Limit</h2>
-                  {ageLimits.map((a, i) => (
-                    <div key={i} className={styles.dynamicRow}>
-                      <div className={styles.field} style={{flex:'0 0 200px'}}><label>Category</label><input value={a.title} onChange={e => updateAge(i,'title',e.target.value)} placeholder="General / OBC" /></div>
-                      <div className={styles.field} style={{flex:1}}><label>Age Range</label><input value={a.age} onChange={e => updateAge(i,'age',e.target.value)} placeholder="18-25 Years" /></div>
-                      {ageLimits.length > 1 && <button className={styles.removeBtn} onClick={() => removeAge(i)}>✕</button>}
-                    </div>
-                  ))}
-                  <button className={styles.addBtn} onClick={addAge}>+ Add Age Category</button>
-                  <div className={styles.subLabel} style={{marginTop:12}}>One Line Info</div>
-                  {ageOneline.map((item, i) => (
-                    <div key={i} className={styles.inlineRow}>
-                      <input value={item} onChange={e => updateArr(setAgeOneline, i, e.target.value)} placeholder="Age relaxation as per govt rules" />
-                      {ageOneline.length > 1 && <button className={styles.removeInlineBtn} onClick={() => removeArr(setAgeOneline, i)}>✕</button>}
-                    </div>
-                  ))}
-                  <button className={styles.addBtn} onClick={() => addArr(setAgeOneline)}>+ Add Info Line</button>
-                </div>
+            <div style={{display:'flex',justifyContent:'flex-end',paddingBottom:32}}>
+              <button className={styles.copyBtn} onClick={handleCopyJSON} disabled={slugStatus==='taken'} style={{fontSize:'1rem',padding:'13px 32px'}}>
+                {copied ? '✅ JSON Copied!' : '📋 Copy JSON for Blogger'}
+              </button>
+            </div>
 
-                <div className={styles.card}>
-                  <h2 className={styles.cardTitle}>Selection Process</h2>
-                  {selectionProcess.map((s, i) => (
-                    <div key={i} className={styles.inlineRow}>
-                      <input value={s} onChange={e => updateArr(setSelectionProcess, i, e.target.value)} placeholder="Written Exam / Physical Test..." />
-                      {selectionProcess.length > 1 && <button className={styles.removeInlineBtn} onClick={() => removeArr(setSelectionProcess, i)}>✕</button>}
-                    </div>
-                  ))}
-                  <button className={styles.addBtn} onClick={() => addArr(setSelectionProcess)}>+ Add Step</button>
-                </div>
-              </>
-            )}
           </div>
         )}
 
         {step === 2 && preview && <PostPreview data={data} />}
 
-        {/* Confirm Back Modal */}
         {confirmBack && (
           <div className={styles.modalOverlay}>
             <div className={styles.modal}>
@@ -536,8 +477,3 @@ export default function NewPostPage() {
     </div>
   );
 }
-
-/* Add these to new-post.module.css */
-/*
-
-*/

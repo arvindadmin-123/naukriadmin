@@ -108,69 +108,11 @@ export default function RevalidatePage() {
               {isLoading ? '⏳ Revalidating...' : '🔄 Revalidate All (Pages + Posts)'}
             </button>
 
-            {/* Individual base paths
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-              {BASE_PATHS.map(path => (
-                <button
-                  key={path}
-                  onClick={() => handleRevalidate([path], false)}
-                  disabled={isLoading}
-                  style={{
-                    padding: '9px 18px',
-                    background: '#eef1fb', color: '#1a3fa3',
-                    border: '1.5px solid #1a3fa3', borderRadius: '8px',
-                    fontSize: '0.85rem', fontWeight: '700',
-                    cursor: isLoading ? 'not-allowed' : 'pointer',
-                    fontFamily: 'var(--font-poppins)',
-                    opacity: isLoading ? 0.5 : 1,
-                  }}
-                >
-                  {path === '/' ? '🏠 Home' : path.replace('/', '').charAt(0).toUpperCase() + path.replace('/', '').slice(1)}
-                </button>
-              ))}
-            </div> */}
+       
           </div>
         </div>
 
-        {/* Custom Path
-        <div style={{ background: '#fff', border: '1px solid #e0e4ee', borderRadius: '10px', overflow: 'hidden' }}>
-          <div style={{ background: '#1a3fa3', padding: '10px 16px', color: '#fff', fontWeight: '700', fontSize: '0.92rem', fontFamily: 'var(--font-poppins)' }}>
-            Custom Path Revalidate
-          </div>
-          <div style={{ padding: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <input
-              value={custom}
-              onChange={e => setCustom(e.target.value)}
-              placeholder="/jobs/ssc-gd-2026, /result/up-police-2026"
-              style={{
-                flex: 1, minWidth: '260px',
-                padding: '10px 14px',
-                border: '1.5px solid #d0d5e8', borderRadius: '8px',
-                fontSize: '0.88rem', fontFamily: 'var(--font-poppins)',
-                outline: 'none', color: '#333',
-              }}
-              onKeyDown={e => e.key === 'Enter' && handleCustom()}
-            />
-            <button
-              onClick={handleCustom}
-              disabled={isLoading || !custom.trim()}
-              style={{
-                padding: '10px 20px',
-                background: '#e67e22', color: '#fff',
-                border: 'none', borderRadius: '8px',
-                fontSize: '0.88rem', fontWeight: '700',
-                cursor: isLoading || !custom.trim() ? 'not-allowed' : 'pointer',
-                fontFamily: 'var(--font-poppins)',
-                opacity: isLoading || !custom.trim() ? 0.5 : 1,
-              }}
-            >
-              🔄 Revalidate
-            </button>
-          </div>
-          <p style={{ padding: '0 20px 16px', fontSize: '0.8rem', color: '#888', fontFamily: 'var(--font-poppins)' }}>
-            Multiple paths comma se alag karo। Example: /jobs/ssc-gd-2026, /result
-          </p>
-        </div> */}
+     
       </main>
     </div>
   );
