@@ -1,43 +1,25 @@
 // src/app/dashboard/page.js
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
+'use client';
+import { useEffect } from 'react';
+// import { cookies } from 'next/headers';
 import Link from 'next/link';
+import { useAdminData } from '../context/AdminDataContext';
 import styles from './dashboard.module.css';
 import MobileSidebar from '../MobileSidebar';
 
-const BLOG_ID = '4760900627062932844';
-const POST_ID = '1971014663745817119';
-const API_KEY = 'AIzaSyBcomLK77PJdaM7CXysztVxeAg8iVbF6c0';
+export default function Dashboard() {
+  const { posts, loading, error, fetchPosts } = useAdminData();
 
-async function getStats() {
-  try {
-    const res = await fetch(
-      `https://www.googleapis.com/blogger/v3/blogs/${BLOG_ID}/posts/${POST_ID}?key=${API_KEY}`,
-      { cache: 'no-store' }
-    );
-    const blogData = await res.json();
-    const arr = JSON.parse(blogData.content);
-    if (!Array.isArray(arr)) return { total: 0, categories: {}, latest: [] };
+  // Pehli baar load karo — agar already fetched hai toh API call nahi hogi
+  useEffect(() => { fetchPosts(); }, []);
 
-    const categories = {};
-    arr.forEach((job) => {
-      const cat = (job.category || 'other').toLowerCase();
-      categories[cat] = (categories[cat] || 0) + 1;
-    });
-
-    const latest = arr.slice(0, 10);
-    return { total: arr.length, categories, latest };
-  } catch {
-    return { total: 0, categories: {}, latest: [] };
-  }
-}
-
-export default async function Dashboard() {
-  const cookieStore = await cookies();
-  const isLoggedIn = cookieStore.get('admin_auth')?.value === 'true';
-  if (!isLoggedIn) redirect('/');
-
-  const { total, categories, latest } = await getStats();
+  const total = posts?.length || 0;
+  const categories = {};
+  posts?.forEach(job => {
+    const cat = (job.category || 'other').toLowerCase();
+    categories[cat] = (categories[cat] || 0) + 1;
+  });
+  const latest = posts?.slice(0, 10) || [];
 
   const catConfig = [
     { key: 'jobs',        label: 'Jobs',       color: '#1a3fa3', bg: '#eef1fb' },
@@ -60,6 +42,7 @@ export default async function Dashboard() {
           <Link href="/dashboard" className={`${styles.navLink} ${styles.active}`}>📊 Dashboard</Link>
           <Link href="/new-post" className={styles.navLink}>✏️ New Post</Link>
           <Link href="/posts" className={styles.navLink}>📋 All Posts</Link>
+          <Link href="/fetch-post" className={styles.navLink}>🔗 Fetch Post</Link>
           <Link href="/revalidate" className={styles.navLink}>🔄 Revalidate</Link>
         </nav>
         <form action="/api/admin/logout" method="POST" className={styles.logoutWrap}>
@@ -71,6 +54,9 @@ export default async function Dashboard() {
         <div className={styles.header}>
           <h1 className={styles.title}>Dashboard</h1>
         </div>
+
+        {loading && <p style={{ color: '#888', fontFamily: 'var(--font-poppins)', fontSize: '0.9rem' }}>⏳ Loading...</p>}
+        {error   && <p style={{ color: '#c0392b', fontFamily: 'var(--font-poppins)', fontSize: '0.9rem' }}>❌ {error}</p>}
 
         <div className={styles.statsGrid}>
           <div className={styles.statCard} style={{ borderTopColor: '#1a3fa3', background: '#eef1fb' }}>
@@ -87,6 +73,7 @@ export default async function Dashboard() {
 
         <div className={styles.actions}>
           <Link href="/new-post" className={styles.actionBtn}>✏️ Create New Post</Link>
+          <Link href="/fetch-post" className={styles.actionBtn2}>🔍 Fetch & Edit Post</Link>
         </div>
 
         <div className={styles.section}>

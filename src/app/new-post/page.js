@@ -6,19 +6,37 @@ import MobileSidebar from '../MobileSidebar';
 import PostPreview from '../components/Postpreview';
 import styles from './new-post.module.css';
 
-const BLOG_ID = '2842912977848904218';
-const POST_ID = '3377912945921363783';
-const API_KEY = 'AIzaSyALruA3pculIf5zjHeam_wq3fOHQSUJZ7o';
+const BLOG_ID = process.env.NEXT_PUBLIC_BLOGGER_BLOG_ID || '2842912977848904218';
+const POST_ID = process.env.NEXT_PUBLIC_BLOGGER_POST_ID || '3377912945921363783';
+const API_KEY = process.env.NEXT_PUBLIC_BLOGGER_API_KEY || 'AIzaSyALruA3pculIf5zjHeam_wq3fOHQSUJZ7o';
 
 const CATEGORIES = ['Jobs', 'result', 'admit-card', 'answer-key', 'syllabus'];
 
 const emptyTable = () => ({ title: '', columns: ['', ''], rows: [['', '']], oneline: [] });
 const emptyBlock = () => ({ title: '', content: [''], oneline: [] });
 
+// Category wise default date keys
+const DEFAULT_DATE_KEYS = {
+  Jobs:         ['notification_release', 'apply_start', 'last_date', 'exam_date', 'admit_card_date', 'result_date'],
+  result:       ['exam_date', 'result_date'],
+  'admit-card': ['exam_date', 'admit_card_date'],
+  'answer-key': ['exam_date', 'answer_key_date'],
+  syllabus:     ['exam_date', 'last_date'],
+};
+
+const DATE_LABELS = {
+  notification_release: 'Notification Release',
+  apply_start:          'Apply Start',
+  last_date:            'Last Date',
+  exam_date:            'Exam Date',
+  admit_card_date:      'Admit Card Date',
+  answer_key_date:      'Answer Key Date',
+  result_date:          'Result Date',
+};
+
 export default function NewPostPage() {
   const [step, setStep]         = useState(1);
   const [category, setCategory] = useState('');
-
   const [title, setTitle]           = useState('');
   const [id, setId]                 = useState('');
   const [createdAt, setCreatedAt]   = useState('');
@@ -26,22 +44,16 @@ export default function NewPostPage() {
   const [totalVacancy, setTotalVacancy] = useState('');
   const [jobLocation, setJobLocation]   = useState('');
   const [shortNote, setShortNote]       = useState('');
-
   const [tags, setTags]                     = useState(['']);
   const [qualification1, setQualification1] = useState(['']);
-
-  // Dynamic dates — key custom likhne wala
-  const [dates, setDates]           = useState([{ key: '', value: '' }]);
-  const [links, setLinks]           = useState([{ name: '', url: '' }]);
+  const [dates, setDates]           = useState([]);
+  const [links, setLinks]           = useState([{ name: 'official_website', url: '' }]);
   const [categoryLink, setCategoryLink] = useState('');
-
   const [videoTitle, setVideoTitle] = useState('');
   const [videoUrl, setVideoUrl]     = useState('');
-
   const [type1, setType1] = useState([]);
   const [type2, setType2] = useState([]);
   const [type3, setType3] = useState([]);
-
   const [slugStatus, setSlugStatus]   = useState('');
   const [preview, setPreview]         = useState(false);
   const [confirmBack, setConfirmBack] = useState(false);
@@ -52,14 +64,12 @@ export default function NewPostPage() {
     const d = new Date();
     return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
   };
-
   const toInputDate = (ddmmyyyy) => {
     if (!ddmmyyyy) return '';
     const parts = ddmmyyyy.split('/');
     if (parts.length !== 3) return '';
     return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
   };
-
   const fromInputDate = (yyyymmdd) => {
     if (!yyyymmdd) return '';
     const parts = yyyymmdd.split('-');
@@ -70,6 +80,9 @@ export default function NewPostPage() {
   const handleCategorySelect = (cat) => {
     setCategory(cat);
     setCreatedAt(getTodayDate());
+    // Default dates set karo category ke hisab se
+    const defaultKeys = DEFAULT_DATE_KEYS[cat] || [];
+    setDates(defaultKeys.map(key => ({ key, value: '' })));
     setStep(2);
   };
 
@@ -98,9 +111,8 @@ export default function NewPostPage() {
   const addArr    = (setter, empty = '') => setter(prev => [...prev, empty]);
   const removeArr = (setter, i) => setter(prev => prev.filter((_, j) => j !== i));
 
-  // Dynamic dates
   const updateDate  = (i, f, v) => setDates(prev => prev.map((d, j) => j === i ? { ...d, [f]: v } : d));
-  const addDate     = () => setDates(prev => [...prev, { key: '', value: '' }]);
+  const addDate     = () => setDates(prev => [...prev, { key: 'last_date', value: '' }]);
   const removeDate  = (i) => setDates(prev => prev.filter((_, j) => j !== i));
 
   const updateLink = (i, f, v) => setLinks(prev => prev.map((l, j) => j === i ? { ...l, [f]: v } : l));
@@ -118,7 +130,6 @@ export default function NewPostPage() {
   const addType1Oneline   = (i) => setType1(prev => prev.map((t, j) => j === i ? { ...t, oneline: [...(t.oneline||[]), ''] } : t));
   const removeType1Oneline= (ti, ii) => setType1(prev => prev.map((t, j) => j === ti ? { ...t, oneline: t.oneline.filter((_, k) => k !== ii) } : t));
   const updateType1Oneline= (ti, ii, v) => setType1(prev => prev.map((t, j) => j === ti ? { ...t, oneline: t.oneline.map((o, k) => k === ii ? v : o) } : t));
-
   // Type2
   const addType2          = () => setType2(prev => [...prev, emptyTable()]);
   const removeType2       = (i) => setType2(prev => prev.filter((_, j) => j !== i));
@@ -132,7 +143,6 @@ export default function NewPostPage() {
   const addType2Oneline   = (i) => setType2(prev => prev.map((t, j) => j === i ? { ...t, oneline: [...(t.oneline||[]), ''] } : t));
   const removeType2Oneline= (ti, ii) => setType2(prev => prev.map((t, j) => j === ti ? { ...t, oneline: t.oneline.filter((_, k) => k !== ii) } : t));
   const updateType2Oneline= (ti, ii, v) => setType2(prev => prev.map((t, j) => j === ti ? { ...t, oneline: t.oneline.map((o, k) => k === ii ? v : o) } : t));
-
   // Type3
   const addType3          = () => setType3(prev => [...prev, emptyBlock()]);
   const removeType3       = (i) => setType3(prev => prev.filter((_, j) => j !== i));
@@ -149,7 +159,6 @@ export default function NewPostPage() {
     dates.forEach(d => { if (d.key && d.value) importantDates[d.key] = d.value; });
     const importantLinks = {};
     links.forEach(l => { if (l.name && l.url) importantLinks[l.name.toLowerCase().replace(/\s+/g, '_')] = l.url; });
-
     return {
       id,
       created_at: createdAt || getTodayDate(),
@@ -190,6 +199,8 @@ export default function NewPostPage() {
     syllabus: 'Download Syllabus URL'
   };
 
+  const ALL_DATE_KEYS = ['notification_release','apply_start','last_date','exam_date','admit_card_date','answer_key_date','result_date'];
+
   const data = buildData();
 
   return (
@@ -201,7 +212,8 @@ export default function NewPostPage() {
           <Link href="/dashboard" className={styles.navLink}>📊 Dashboard</Link>
           <Link href="/new-post" className={`${styles.navLink} ${styles.active}`}>✏️ New Post</Link>
           <Link href="/posts" className={styles.navLink}>📋 All Posts</Link>
-           <Link href="/revalidate" className={styles.navLink}>🔄 Revalidate</Link>
+          <Link href="/fetch-post" className={styles.navLink}>🔗 Fetch Post</Link>
+          <Link href="/revalidate" className={styles.navLink}>🔄 Revalidate</Link>
         </nav>
         <form action="/api/admin/logout" method="POST" className={styles.logoutWrap}>
           <button type="submit" className={styles.logoutBtn}>🚪 Logout</button>
@@ -288,8 +300,8 @@ export default function NewPostPage() {
                 <button className={styles.addBtn} onClick={() => addArr(setQualification1)}>+ Add Qualification</button>
               </div>
               <div className={styles.field}>
-                <label>Short Note <span style={{fontWeight:400,color:'#888',fontSize:'0.78rem'}}>(khali chhodo = auto generate)</span></label>
-                <textarea value={shortNote} onChange={e => setShortNote(e.target.value)} placeholder="Custom short note likhein..." rows={3} style={{width:'100%',padding:'10px 14px',border:'1.5px solid #d0d5e8',borderRadius:'8px',fontFamily:'var(--font-poppins)',fontSize:'0.88rem',resize:'vertical',outline:'none'}} />
+                <label>Short Note <span style={{fontWeight:400,color:'#888',fontSize:'0.78rem'}}>(optional)</span></label>
+                <textarea value={shortNote} onChange={e => setShortNote(e.target.value)} placeholder="Custom short note..." rows={3} style={{width:'100%',padding:'10px 14px',border:'1.5px solid #d0d5e8',borderRadius:'8px',fontFamily:'var(--font-poppins)',fontSize:'0.88rem',resize:'vertical',outline:'none'}} />
               </div>
             </div>
 
@@ -299,17 +311,17 @@ export default function NewPostPage() {
               <div className={styles.field}><label>{catLinkLabel[category]}</label><input value={categoryLink} onChange={e => setCategoryLink(e.target.value)} placeholder="https://..." /></div>
             </div>
 
-            {/* Important Dates — fully dynamic */}
+            {/* Important Dates — fixed labels with dropdown */}
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>Important Dates</h2>
               {dates.map((d, i) => (
                 <div key={i} className={styles.dynamicRow}>
-                  <div className={styles.field} style={{flex:'0 0 180px'}}>
+                  <div className={styles.field} style={{flex:'0 0 200px'}}>
                     <label>Date Label</label>
                     <input value={d.key} onChange={e => updateDate(i, 'key', e.target.value)} placeholder="last_date / exam_date..." />
                   </div>
                   <div className={styles.field} style={{flex:1}}>
-                    <label>Date (DD/MM/YYYY)</label>
+                    <label>Date</label>
                     <input type="date" value={toInputDate(d.value)} onChange={e => updateDate(i, 'value', fromInputDate(e.target.value))} />
                   </div>
                   <button className={styles.removeBtn} onClick={() => removeDate(i)}>✕</button>
@@ -323,7 +335,7 @@ export default function NewPostPage() {
               <h2 className={styles.cardTitle}>Important Links</h2>
               {links.map((l, i) => (
                 <div key={i} className={styles.dynamicRow}>
-                  <div className={styles.field} style={{flex:'0 0 180px'}}><label>Link Name</label><input value={l.name} onChange={e => updateLink(i, 'name', e.target.value)} placeholder="Official Website" /></div>
+                  <div className={styles.field} style={{flex:'0 0 180px'}}><label>Link Name</label><input value={l.name} onChange={e => updateLink(i, 'name', e.target.value)} placeholder="official_website" /></div>
                   <div className={styles.field} style={{flex:1}}><label>URL</label><input value={l.url} onChange={e => updateLink(i, 'url', e.target.value)} placeholder="https://..." /></div>
                   {links.length > 1 && <button className={styles.removeBtn} onClick={() => removeLink(i)}>✕</button>}
                 </div>

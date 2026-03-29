@@ -8,12 +8,11 @@ import PostPreview from '../../components/Postpreview';
 import styles from '../../new-post/new-post.module.css';
 
 const CATEGORIES = ['Jobs', 'result', 'admit-card', 'answer-key', 'syllabus'];
-const BLOG_ID = '2842912977848904218';
-const POST_ID = '3377912945921363783';
-const API_KEY = 'AIzaSyALruA3pculIf5zjHeam_wq3fOHQSUJZ7o';
-
 const emptyTable = () => ({ title: '', columns: ['', ''], rows: [['', '']], oneline: [] });
 const emptyBlock = () => ({ title: '', content: [''], oneline: [] });
+const BLOG_ID = '4760900627062932844';
+const POST_ID = '1971014663745817119';
+const API_KEY = 'AIzaSyBcomLK77PJdaM7CXysztVxeAg8iVbF6c0';
 
 async function fetchAllPosts() {
   try {
@@ -28,7 +27,8 @@ async function fetchAllPosts() {
 }
 
 export default function EditPostPage() {
-  const { slug } = useParams();
+  const params = useParams();
+  const slug = decodeURIComponent(params.slug || '');
   const router = useRouter();
 
   const toInputDate = (ddmmyyyy) => {
@@ -79,7 +79,7 @@ export default function EditPostPage() {
     async function loadJob() {
       const allPosts = await fetchAllPosts();
       setAllIds(allPosts.map(p => p.id).filter(Boolean));
-      const data = allPosts.find(p => p.id === slug);
+      const data = allPosts.find(p => p.id === slug || p.id === decodeURIComponent(slug));
       if (!data) { setError('Post not found: ' + slug); setLoading(false); return; }
 
       setOriginalId(data.id);

@@ -46,14 +46,14 @@ export async function POST(request) {
   try {
     const { paths, revalidateAll } = await request.json();
 
-    const basePaths = ['/', '/jobs', '/result', '/admit-card', '/answer-key', '/syllabus', '/search'];
+    let allPaths;
 
-    let allPaths = paths || basePaths;
-
-    // revalidateAll = true hone par saare individual post pages bhi revalidate karo
     if (revalidateAll) {
+      const basePaths = ['/', '/jobs', '/result', '/admit-card', '/answer-key', '/syllabus', '/search'];
       const postPaths = await getAllPostPaths();
       allPaths = [...new Set([...basePaths, ...postPaths])];
+    } else {
+      allPaths = paths || ['/'];
     }
 
     const res = await fetch(`${SITE_URL}/api/revalidate`, {
@@ -64,7 +64,7 @@ export async function POST(request) {
 
     const data = await res.json();
 
-    if (!res.ok) {
+    if (!data.success) {
       return NextResponse.json({ error: data.error || 'Revalidation failed' }, { status: 500 });
     }
 

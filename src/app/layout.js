@@ -1,5 +1,6 @@
-// src/app/layout.js
+// src/app/layout.js  (Admin Panel)
 import { Poppins } from 'next/font/google';
+import { AdminDataProvider } from './context/AdminDataContext';
 import './admin-global.css';
 
 const poppins = Poppins({
@@ -17,7 +18,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={poppins.variable}>
       <body>
-        {children}
+        <AdminDataProvider>
+          {children}
+        </AdminDataProvider>
       </body>
     </html>
   );

@@ -2,46 +2,29 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useAdminData } from '../context/AdminDataContext';
 import MobileSidebar from '../MobileSidebar';
 import styles from './posts.module.css';
 
 const CATEGORIES = ['All', 'Jobs', 'result', 'admit-card', 'answer-key', 'syllabus'];
-const BLOG_ID = '4760900627062932844';
-const POST_ID = '1971014663745817119';
-const API_KEY = 'AIzaSyBcomLK77PJdaM7CXysztVxeAg8iVbF6c0';
 
 export default function PostsPage() {
-  const [jobs, setJobs]         = useState([]);
+  const { posts, loading, error, fetchPosts } = useAdminData();
+
   const [filtered, setFiltered] = useState([]);
   const [search, setSearch]     = useState('');
   const [category, setCategory] = useState('All');
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState('');
+  const [deleteId, setDeleteId] = useState(null);
+  const [deleting, setDeleting] = useState(null);
+  const [deleteError, setDeleteError] = useState('');
 
-  useEffect(() => {
-    async function fetchJobs() {
-      try {
-        const res = await fetch(
-          `https://www.googleapis.com/blogger/v3/blogs/${BLOG_ID}/posts/${POST_ID}?key=${API_KEY}`,
-          { cache: 'no-store' }
-        );
-        const data = await res.json();
-        const arr = JSON.parse(data.content);
-        if (Array.isArray(arr)) {
-          const limited = arr.slice(0, 20);
-          setJobs(limited);
-          setFiltered(limited);
-        }
-      } catch (err) {
-        setError('Data load failed: ' + err.message);
-      }
-      setLoading(false);
-    }
-    fetchJobs();
-  }, []);
+  // Fetch on mount — agar already cached hai toh API call nahi hogi
+  useEffect(() => { fetchPosts(); }, []);
 
+  // Filter
   const applyFilter = useCallback(() => {
-    let result = [...jobs];
+    if (!posts) return;
+    let result = [...posts];
     if (category !== 'All') {
       result = result.filter(j => j.category?.toLowerCase() === category.toLowerCase());
     }
@@ -54,7 +37,7 @@ export default function PostsPage() {
       );
     }
     setFiltered(result);
-  }, [jobs, search, category]);
+  }, [posts, search, category]);
 
   useEffect(() => { applyFilter(); }, [applyFilter]);
 
@@ -71,6 +54,7 @@ export default function PostsPage() {
           <Link href="/dashboard" className={styles.navLink}>📊 Dashboard</Link>
           <Link href="/new-post" className={styles.navLink}>✏️ New Post</Link>
           <Link href="/posts" className={`${styles.navLink} ${styles.active}`}>📋 All Posts</Link>
+          <Link href="/fetch-post" className={styles.navLink}>🔗 Fetch Post</Link>
           <Link href="/revalidate" className={styles.navLink}>🔄 Revalidate</Link>
         </nav>
         <form action="/api/admin/logout" method="POST" className={styles.logoutWrap}>
@@ -88,7 +72,7 @@ export default function PostsPage() {
           <input
             type="text"
             className={styles.searchInput}
-            placeholder="Search by title, organization, URL..."
+            placeholder="Search by title, organization, ID..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -107,10 +91,10 @@ export default function PostsPage() {
 
         <p className={styles.count}>{filtered.length} posts found</p>
 
-        {error && <div style={{ color: '#c0392b', padding: '12px', background: '#fdf0ee', borderRadius: '8px', marginBottom: '12px' }}>{error}</div>}
+        {error && <div style={{ color: '#c0392b', padding: '12px', background: '#fdf0ee', borderRadius: '8px', marginBottom: '12px', fontFamily: 'var(--font-poppins)', fontSize: '0.85rem' }}>{error}</div>}
 
         {loading ? (
-          <div className={styles.loading}>Loading...</div>
+          <div className={styles.loading}>⏳ Loading...</div>
         ) : filtered.length === 0 ? (
           <div className={styles.empty}>No posts found</div>
         ) : (
@@ -121,7 +105,7 @@ export default function PostsPage() {
                   <th>Title</th>
                   <th>Category</th>
                   <th>Organization</th>
-                  <th>URL / ID</th>
+                  <th>ID</th>
                   <th>Actions</th>
                 </tr>
               </thead>
