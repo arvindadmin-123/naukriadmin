@@ -16,7 +16,7 @@ function formatDate(dateStr) {
 }
 
 function formatLabel(key) {
-  return key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  return String(key).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
 function hasData(obj) {
@@ -52,7 +52,7 @@ function SectionBlock({ title, children }) {
   );
 }
 
-// Dynamic KV Table — dates etc.
+// KV Table — dates free text support
 function KVTable({ data = {} }) {
   if (!data || typeof data !== 'object') return null;
   const rows = Object.entries(data).filter(([, v]) =>
@@ -66,8 +66,8 @@ function KVTable({ data = {} }) {
           <tr key={key}>
             <td className={styles.kvLabel}>{formatLabel(key)}</td>
             <td className={styles.kvValue}>
-              {typeof value === 'string' && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(value)
-                ? formatDate(value)
+              {/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(String(value))
+                ? formatDate(String(value))
                 : String(value)}
             </td>
           </tr>
@@ -151,6 +151,41 @@ function ContentBlock({ data = [] }) {
   );
 }
 
+// ✅ LinkTable — type4
+function LinkTable({ data }) {
+  if (!data) return null;
+  const rows = Array.isArray(data.rows) ? data.rows.filter(r => r.label || r.url) : [];
+  const oneline = Array.isArray(data.oneline) ? data.oneline.filter(Boolean) : [];
+  if (rows.length === 0 && oneline.length === 0) return null;
+  return (
+    <div>
+      {rows.length > 0 && (
+        <div className={styles.vacancyWrap}>
+          <table className={styles.vacancyTable}>
+            <tbody>
+              {rows.map((row, i) => (
+                <tr key={i}>
+                  <td className={styles.tdLabel}>{row.label || '—'}</td>
+                  <td className={styles.tdValue}>
+                    {row.url
+                      ? <a href={fixUrl(row.url)} target="_blank" rel="noopener noreferrer" className={styles.link}>Click Here ›</a>
+                      : '—'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {oneline.length > 0 && (
+        <div className={styles.oneline}>
+          {oneline.map((item, j) => <span key={j} className={styles.onelineItem}>{item}</span>)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function JobHero({ job }) {
   const CAT_COLORS = {
     'jobs':       { bg: '#e8f5e9', color: '#2e7d32' },
@@ -196,7 +231,6 @@ function JobHero({ job }) {
   );
 }
 
-// ShortInfo — custom ya auto
 function ShortInfo({ item }) {
   if (!item) return null;
   if (item.short_note && item.short_note.trim() !== '') {
@@ -216,7 +250,6 @@ function ShortInfo({ item }) {
   return <div className={styles.shortInfo} dangerouslySetInnerHTML={{ __html: parts.join(' ') }} />;
 }
 
-// ImportantLinks
 function ImportantLinks({ item = {} }) {
   const allLinks = [];
   if (item.jobs?.apply_online)              allLinks.push({ label: 'Apply Online',       url: fixUrl(item.jobs.apply_online),              cls: 'green' });
@@ -246,7 +279,6 @@ function ImportantLinks({ item = {} }) {
   );
 }
 
-// VideoEmbed
 function VideoEmbed({ url }) {
   const videoId = getYouTubeId(url);
   if (!videoId) return null;
@@ -285,7 +317,7 @@ export default function PostPreview({ data }) {
           <ShortInfo item={data} />
         </SectionBlock>
 
-        {/* Important Dates — dynamic */}
+        {/* Important Dates */}
         {hasData(data.important_dates) && (
           <SectionBlock title="Important Dates">
             <KVTable data={data.important_dates} />
@@ -300,13 +332,21 @@ export default function PostPreview({ data }) {
                 <li key={i} className={styles.contentItem}><span className={styles.dot}>•</span><span>{q}</span></li>
               ))}
             </ul>
+            {/* ✅ qualification1_oneline */}
+            {Array.isArray(data.qualification1_oneline) && data.qualification1_oneline.filter(Boolean).length > 0 && (
+              <div className={styles.oneline}>
+                {data.qualification1_oneline.filter(Boolean).map((item, i) => (
+                  <span key={i} className={styles.onelineItem}>{item}</span>
+                ))}
+              </div>
+            )}
           </SectionBlock>
         )}
 
         {/* Type1 */}
         {Array.isArray(data.type1) && data.type1.map((grid, i) =>
           (grid?.rows?.length || grid?.oneline?.length) ? (
-            <SectionBlock key={i} title={grid.title || 'Details'}>
+            <SectionBlock key={`t1-${i}`} title={grid.title || 'Details'}>
               <VacancyGrid data={[grid]} />
             </SectionBlock>
           ) : null
@@ -315,7 +355,7 @@ export default function PostPreview({ data }) {
         {/* Type2 */}
         {Array.isArray(data.type2) && data.type2.map((grid, i) =>
           (grid?.rows?.length || grid?.oneline?.length) ? (
-            <SectionBlock key={i} title={grid.title || 'Details'}>
+            <SectionBlock key={`t2-${i}`} title={grid.title || 'Details'}>
               <VacancyGrid data={[grid]} />
             </SectionBlock>
           ) : null
@@ -324,8 +364,17 @@ export default function PostPreview({ data }) {
         {/* Type3 */}
         {Array.isArray(data.type3) && data.type3.map((block, i) =>
           block?.title ? (
-            <SectionBlock key={i} title={block.title}>
+            <SectionBlock key={`t3-${i}`} title={block.title}>
               <ContentBlock data={[block]} />
+            </SectionBlock>
+          ) : null
+        )}
+
+        {/* ✅ Type4 — Link Tables */}
+        {Array.isArray(data.type4) && data.type4.map((table, i) =>
+          (table?.rows?.length > 0 || table?.oneline?.length > 0) ? (
+            <SectionBlock key={`t4-${i}`} title={table.title || 'Links'}>
+              <LinkTable data={table} />
             </SectionBlock>
           ) : null
         )}

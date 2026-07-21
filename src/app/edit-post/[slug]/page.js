@@ -10,6 +10,7 @@ import styles from '../../new-post/new-post.module.css';
 const CATEGORIES = ['Jobs', 'result', 'admit-card', 'answer-key', 'syllabus'];
 const emptyTable = () => ({ title: '', columns: ['', ''], rows: [['', '']], oneline: [] });
 const emptyBlock = () => ({ title: '', content: [''], oneline: [] });
+const emptyLinkRow = () => ({ label: '', url: '' });
 const BLOG_ID = '4760900627062932844';
 const POST_ID = '1971014663745817119';
 const API_KEY = 'AIzaSyBcomLK77PJdaM7CXysztVxeAg8iVbF6c0';
@@ -67,6 +68,8 @@ export default function EditPostPage() {
   const [videoTitle, setVideoTitle]     = useState('');
   const [videoUrl, setVideoUrl]         = useState('');
   const [type1, setType1] = useState([]);
+  const [type4, setType4] = useState([]);
+  const [qual1Oneline, setQual1Oneline] = useState([]);
   const [type2, setType2] = useState([]);
   const [type3, setType3] = useState([]);
   const [slugStatus, setSlugStatus]   = useState('available');
@@ -218,8 +221,10 @@ export default function EditPostPage() {
       type1: type1.filter(t => t.rows.length > 0).map(t => ({ ...t, oneline: (t.oneline||[]).filter(Boolean) })),
       type2: type2.filter(t => t.rows.length > 0).map(t => ({ ...t, oneline: (t.oneline||[]).filter(Boolean) })),
       type3: type3.filter(b => b.title).map(b => ({ ...b, oneline: (b.oneline||[]).filter(Boolean) })),
+      type4: type4.filter(t => t.title || t.rows?.length > 0).map(t => ({ ...t, rows: (t.rows||[]).filter(r => r.label || r.url) })),
+      qualification1_oneline: qual1Oneline.filter(Boolean),
     };
-  }, [id, createdAt, category, title, organization, totalVacancy, jobLocation, shortNote, tags, qualification1, dates, links, categoryLink, videoTitle, videoUrl, type1, type2, type3]);
+  }, [id, createdAt, category, title, organization, totalVacancy, jobLocation, shortNote, tags, qualification1, qual1Oneline, dates, links, categoryLink, videoTitle, videoUrl, type1, type2, type3, type4]);
 
   const handleCopyJson = () => {
     if (!id || !title || !category) { setError('Title, URL aur Category zaroori hai!'); return; }
@@ -329,6 +334,14 @@ export default function EditPostPage() {
                   </div>
                 ))}
                 <button className={styles.addBtn} onClick={() => addArr(setQualification1)}>+ Add Qualification</button>
+                <div className={styles.subLabel} style={{marginTop:10}}>One Line Info <span style={{fontWeight:400,color:'#888',fontSize:'0.75rem'}}>(optional)</span></div>
+                {qual1Oneline.map((item, i) => (
+                  <div key={i} className={styles.inlineRow}>
+                    <input value={item} onChange={e => setQual1Oneline(prev => prev.map((v,j)=>j===i?e.target.value:v))} placeholder="Age limit, extra note..." />
+                    <button className={styles.removeInlineBtn} onClick={() => setQual1Oneline(prev => prev.filter((_,j)=>j!==i))}>✕</button>
+                  </div>
+                ))}
+                <button className={styles.addBtn} onClick={() => setQual1Oneline(prev => [...prev, ''])}>+ Add One Line</button>
               </div>
               <div className={styles.field}>
                 <label>Short Note <span style={{fontWeight:400,color:'#888',fontSize:'0.78rem'}}>(khali = auto generate)</span></label>
@@ -381,7 +394,11 @@ export default function EditPostPage() {
                 <div key={ti} className={styles.tableBlock}>
                   <div className={styles.tableBlockHeader}>
                     <input className={styles.tableTitleInput} value={t.title} onChange={e => updateType1(ti, 'title', e.target.value)} placeholder="Table Title" />
-                    <button className={styles.removeBtn} onClick={() => removeType1(ti)}>✕ Remove</button>
+                    <div style={{display:'flex',gap:4}}>
+                      {ti > 0 && <button className={styles.removeBtn} style={{background:'#888'}} onClick={() => setType1(prev => { const a=[...prev]; [a[ti-1],a[ti]]=[a[ti],a[ti-1]]; return a; })}>↑</button>}
+                      {ti < type1.length-1 && <button className={styles.removeBtn} style={{background:'#888'}} onClick={() => setType1(prev => { const a=[...prev]; [a[ti],a[ti+1]]=[a[ti+1],a[ti]]; return a; })}>↓</button>}
+                      <button className={styles.removeBtn} onClick={() => removeType1(ti)}>✕ Remove</button>
+                    </div>
                   </div>
                   <div className={styles.tableGrid}>
                     <div className={styles.tableHeaderRow}>
@@ -421,7 +438,11 @@ export default function EditPostPage() {
                 <div key={ti} className={styles.tableBlock}>
                   <div className={styles.tableBlockHeader}>
                     <input className={styles.tableTitleInput} value={t.title} onChange={e => updateType2(ti, 'title', e.target.value)} placeholder="Table Title" />
-                    <button className={styles.removeBtn} onClick={() => removeType2(ti)}>✕ Remove</button>
+                    <div style={{display:'flex',gap:4}}>
+                      {ti > 0 && <button className={styles.removeBtn} style={{background:'#888'}} onClick={() => setType2(prev => { const a=[...prev]; [a[ti-1],a[ti]]=[a[ti],a[ti-1]]; return a; })}>↑</button>}
+                      {ti < type2.length-1 && <button className={styles.removeBtn} style={{background:'#888'}} onClick={() => setType2(prev => { const a=[...prev]; [a[ti],a[ti+1]]=[a[ti+1],a[ti]]; return a; })}>↓</button>}
+                      <button className={styles.removeBtn} onClick={() => removeType2(ti)}>✕ Remove</button>
+                    </div>
                   </div>
                   <div className={styles.tableGrid}>
                     <div className={styles.tableHeaderRow}>
@@ -463,7 +484,11 @@ export default function EditPostPage() {
                 <div key={bi} className={styles.tableBlock}>
                   <div className={styles.tableBlockHeader}>
                     <input className={styles.tableTitleInput} value={b.title} onChange={e => updateType3Title(bi, e.target.value)} placeholder="Block Title" />
-                    <button className={styles.removeBtn} onClick={() => removeType3(bi)}>✕ Remove</button>
+                    <div style={{display:'flex',gap:4}}>
+                      {bi > 0 && <button className={styles.removeBtn} style={{background:'#888'}} onClick={() => setType3(prev => { const a=[...prev]; [a[bi-1],a[bi]]=[a[bi],a[bi-1]]; return a; })}>↑</button>}
+                      {bi < type3.length-1 && <button className={styles.removeBtn} style={{background:'#888'}} onClick={() => setType3(prev => { const a=[...prev]; [a[bi],a[bi+1]]=[a[bi+1],a[bi]]; return a; })}>↓</button>}
+                      <button className={styles.removeBtn} onClick={() => removeType3(bi)}>✕ Remove</button>
+                    </div>
                   </div>
                   {b.content.map((item, ii) => (
                     <div key={ii} className={styles.inlineRow}>
@@ -483,6 +508,41 @@ export default function EditPostPage() {
                 </div>
               ))}
               <button className={styles.addBtn} onClick={addType3}>+ Add Type3 Block</button>
+            </div>
+
+            {/* Type4 — Link Tables */}
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>Type4 — Link Tables <span style={{fontWeight:400,color:'#888',fontSize:'0.78rem'}}>(State wise links etc.)</span></h2>
+              {type4.map((t, ti) => (
+                <div key={ti} className={styles.tableBlock}>
+                  <div className={styles.tableBlockHeader}>
+                    <input className={styles.tableTitleInput} value={t.title||''} onChange={e => setType4(prev => prev.map((x,j)=>j===ti?{...x,title:e.target.value}:x))} placeholder="Table Title — State Wise PDF Link" />
+                    <div style={{display:'flex',gap:4}}>
+                      {ti > 0 && <button className={styles.removeBtn} style={{background:'#888'}} onClick={() => setType4(prev => { const a=[...prev]; [a[ti-1],a[ti]]=[a[ti],a[ti-1]]; return a; })}>↑</button>}
+                      {ti < type4.length-1 && <button className={styles.removeBtn} style={{background:'#888'}} onClick={() => setType4(prev => { const a=[...prev]; [a[ti],a[ti+1]]=[a[ti+1],a[ti]]; return a; })}>↓</button>}
+                      <button className={styles.removeBtn} onClick={() => setType4(prev => prev.filter((_,j)=>j!==ti))}>✕ Remove</button>
+                    </div>
+                  </div>
+                  <div className={styles.subLabel} style={{marginBottom:6}}>Columns: Label | URL</div>
+                  {(t.rows||[]).map((row, ri) => (
+                    <div key={ri} className={styles.dynamicRow}>
+                      <div className={styles.field} style={{flex:'0 0 180px'}}><input value={row.label||''} onChange={e => setType4(prev => prev.map((x,j)=>j===ti?{...x,rows:x.rows.map((r,k)=>k===ri?{...r,label:e.target.value}:r)}:x))} placeholder="Uttar Pradesh" /></div>
+                      <div className={styles.field} style={{flex:1}}><input value={row.url||''} onChange={e => setType4(prev => prev.map((x,j)=>j===ti?{...x,rows:x.rows.map((r,k)=>k===ri?{...r,url:e.target.value}:r)}:x))} placeholder="https://..." /></div>
+                      <button className={styles.removeBtn} onClick={() => setType4(prev => prev.map((x,j)=>j===ti?{...x,rows:x.rows.filter((_,k)=>k!==ri)}:x))}>✕</button>
+                    </div>
+                  ))}
+                  <button className={styles.addBtn} onClick={() => setType4(prev => prev.map((x,j)=>j===ti?{...x,rows:[...(x.rows||[]),emptyLinkRow()]}:x))}>+ Add Row</button>
+                  <div className={styles.subLabel} style={{marginTop:10}}>One Line Info</div>
+                  {(t.oneline||[]).map((item, ii) => (
+                    <div key={ii} className={styles.inlineRow}>
+                      <input value={item} onChange={e => setType4(prev => prev.map((x,j)=>j===ti?{...x,oneline:x.oneline.map((o,k)=>k===ii?e.target.value:o)}:x))} placeholder="Extra info..." />
+                      <button className={styles.removeInlineBtn} onClick={() => setType4(prev => prev.map((x,j)=>j===ti?{...x,oneline:x.oneline.filter((_,k)=>k!==ii)}:x))}>✕</button>
+                    </div>
+                  ))}
+                  <button className={styles.addBtn} onClick={() => setType4(prev => prev.map((x,j)=>j===ti?{...x,oneline:[...(x.oneline||[]),'']}:x))}>+ Add One Line</button>
+                </div>
+              ))}
+              <button className={styles.addBtn} onClick={() => setType4(prev => [...prev, {title:'', rows:[emptyLinkRow()], oneline:[]}])}>+ Add Type4 Link Table</button>
             </div>
 
             {/* Video */}

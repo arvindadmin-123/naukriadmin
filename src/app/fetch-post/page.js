@@ -11,6 +11,7 @@ import styles from '../new-post/new-post.module.css';
 const CATEGORIES = ['Jobs', 'result', 'admit-card', 'answer-key', 'syllabus'];
 const emptyTable = () => ({ title: '', columns: ['', ''], rows: [['', '']], oneline: [] });
 const emptyBlock = () => ({ title: '', content: [''], oneline: [] });
+const emptyLinkRow = () => ({ label: '', url: '' });
 
 export default function FetchPostPage() {
   const { posts, loading: globalLoading, fetchPosts } = useAdminData();
@@ -38,6 +39,8 @@ export default function FetchPostPage() {
   const [videoTitle, setVideoTitle]     = useState('');
   const [videoUrl, setVideoUrl]         = useState('');
   const [type1, setType1] = useState([]);
+  const [type4, setType4] = useState([]);
+  const [qual1Oneline, setQual1Oneline] = useState([]);
   const [type2, setType2] = useState([]);
   const [type3, setType3] = useState([]);
 
@@ -191,8 +194,10 @@ export default function FetchPostPage() {
       type1: type1.filter(t => t.rows.length > 0).map(t => ({ ...t, oneline: (t.oneline||[]).filter(Boolean) })),
       type2: type2.filter(t => t.rows.length > 0).map(t => ({ ...t, oneline: (t.oneline||[]).filter(Boolean) })),
       type3: type3.filter(b => b.title).map(b => ({ ...b, oneline: (b.oneline||[]).filter(Boolean) })),
+      type4: type4.filter(t => t.title || t.rows?.length > 0).map(t => ({ ...t, rows: (t.rows||[]).filter(r => r.label || r.url) })),
+      qualification1_oneline: qual1Oneline.filter(Boolean),
     };
-  }, [id, createdAt, category, title, organization, totalVacancy, jobLocation, shortNote, tags, qualification1, dates, links, categoryLink, videoTitle, videoUrl, type1, type2, type3]);
+  }, [id, createdAt, category, title, organization, totalVacancy, jobLocation, shortNote, tags, qualification1, qual1Oneline, dates, links, categoryLink, videoTitle, videoUrl, type1, type2, type3, type4]);
 
   const handleCopyJson = () => {
     if (!id || !title || !category) { setError('Title, URL aur Category zaroori hai!'); return; }
